@@ -4,10 +4,10 @@ import { Password } from "@/password";
 import { TDTMethod } from "@/methods/tdt";
 
 const testConfig = {
-    password: "Password123%asd",
-    alpaStrings: ["Password", "asd"],
-    restStrings: ["123", "%"],
-    fuzzed: [],
+    password: "Password1",
+    alpaStrings: ["Password"],
+    rest: { numbers: ["1"], spezials: [] },
+    fuzzed: ["password", "PASSWORD", "password1", "PASSWORD1", "password123"],
 };
 
 const fuzzer = new TDTMethod(new Password(testConfig.password));
@@ -20,7 +20,9 @@ describe("TDT Modell", () => {
         expect(fuzzer.getAlphaElements()).toStrictEqual(testConfig.alpaStrings);
     });
     test("Rest Elements", () => {
-        expect(fuzzer.getRestElements()).toStrictEqual(testConfig.restStrings);
+        const rest = fuzzer.getRestElements();
+        expect(rest.numbers).toStrictEqual(testConfig.rest.numbers);
+        expect(rest.spezials).toStrictEqual(testConfig.rest.spezials);
     });
     test("Fuzz", () => {
         const result = fuzzer.fuzz();
