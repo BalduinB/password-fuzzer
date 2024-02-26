@@ -1,11 +1,25 @@
-import { getGroupMask } from "./lib/config";
+import { CharGroup, MAX_LENGTH, MIN_LENGTH, getGroupMask } from "./lib/config";
 import { isLowerCase, isNumber, isSymbol, isUpperCase } from "./lib/password";
 
 export class Password {
     private mask?: string;
+    private class?: string;
+    private elements?: Array<string>;
 
-    constructor(public password: string) {}
+    constructor(public readonly password: string) {}
+    hasSpecialChar() {
+        return this.getMask().includes(getGroupMask("symbols"));
+    }
 
+    hasNumbers() {
+        return this.getMask().includes(getGroupMask("numbers"));
+    }
+    isTooShort() {
+        return this.password.length < MIN_LENGTH;
+    }
+    isTooLong() {
+        return this.password.length > MAX_LENGTH;
+    }
     getMask() {
         let mask = this.mask;
         if (!mask) {
@@ -16,20 +30,35 @@ export class Password {
     }
 
     getClass() {
-        return this.calculateClass();
+        let pwClass = this.class;
+        if (!pwClass) {
+            pwClass = this.calculateClass();
+            this.class = pwClass;
+        }
+        return pwClass;
     }
-    getElements() {
-        const mask = this.calculateMask();
 
-        mask.split("").reduce((elements, currMask, idx) => {
-            const prevMask = mask[idx - 1];
-            if (idx === 0) {
-                elements.push(this.password[idx] ?? "");
-            } else if (currMask === prevMask) {
-                elements[elements.length - 1] += this.password[idx];
-            } else elements.push(this.password[idx] ?? "");
-            return elements;
-        }, [] as Array<string>);
+    getElements() {
+        let elements = this.elements;
+        if (!elements) {
+            elements = this.calculateElements();
+            this.elements = elements;
+        }
+        return elements;
+    }
+
+    private calculateMask() {
+        let mask = "";
+        for (const char of this.password) {
+            let group: CharGroup;
+            if (isUpperCase(char)) group = "uppercase";
+            else if (isLowerCase(char)) group = "lowercase";
+            else if (isNumber(char)) group = "numbers";
+            else if (isSymbol(char)) group = "symbols";
+            else group = "unknown";
+            mask += getGroupMask(group);
+        }
+        return mask;
     }
 
     private calculateClass() {
@@ -44,22 +73,17 @@ export class Password {
         }
         return cls;
     }
+    private calculateElements() {
+        const mask = this.calculateMask();
 
-    private calculateMask() {
-        let mask = "";
-        for (const char of this.password) {
-            if (isUpperCase(char)) {
-                mask += getGroupMask("uppercase");
-            } else if (isLowerCase(char)) {
-                mask += getGroupMask("lowercase");
-            } else if (isNumber(char)) {
-                mask += getGroupMask("numbers");
-            } else if (isSymbol(char)) {
-                mask += getGroupMask("symbols");
-            } else {
-                mask += getGroupMask("unknown");
-            }
-        }
-        return mask;
+        return mask.split("").reduce((elements, currMask, idx) => {
+            const prevMask = mask[idx - 1];
+            if (idx === 0) {
+                elements.push(this.password[idx] ?? "");
+            } else if (currMask === prevMask) {
+                elements[elements.length - 1] += this.password[idx];
+            } else elements.push(this.password[idx] ?? "");
+            return elements;
+        }, [] as Array<string>);
     }
 }
