@@ -3,12 +3,14 @@
     "license": "MIT",
     "version": "0.0.1",
     "scripts": {
-        "build": "tsup src/index.ts --format cjs,esm --dts"
+        "build": "tsup src/index.ts --format cjs,esm --dts",
+        "test": "vitest"
     },
     "main": "dist/index.js",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
     "devDependencies": {
+        "@types/node": "^20.11.20",
         "@typescript-eslint/eslint-plugin": "^7.0.2",
         "@typescript-eslint/parser": "^7.0.2",
         "eslint": "^8.57.0",

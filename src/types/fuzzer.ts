@@ -1,3 +1,5 @@
+import { Password } from "@/password";
+
 export interface PasswordFuzzerMethod {
-    fuzz(v: string): Array<string>;
+    fuzz(v: Password): Array<string>;
 }
