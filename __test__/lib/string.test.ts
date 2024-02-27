@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 
-import { Password } from "@/password";
 import { expandNumberSequence } from "@/lib/string";
 
 describe("lib/string", () => {

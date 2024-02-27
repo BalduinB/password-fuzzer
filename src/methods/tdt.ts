@@ -9,15 +9,27 @@ import {
 import { Password } from "@/password";
 import { PasswordFuzzerMethod } from "@/types/fuzzer";
 
+type TDTMOdelConfig = {
+    fuzzClass?: boolean;
+};
+const DEFAULT_TDT_CONFIG: TDTMOdelConfig = {
+    fuzzClass: false,
+};
+/** This class implememnts methods from the TDT Modell found in `Password cracking based on learned patterns from disclosed passwords`
+ * @link{https://core.ac.uk/download/pdf/225229085.pdf}
+ * @implements PasswordFuzzerMethod
+ */
 export class TDTMethod implements PasswordFuzzerMethod {
     private results: Array<string> = [];
     private fuzzedNumbers: Array<string> = [];
     private fuzzedAlphas: Array<string> = [];
     private fuzzedSpecials: Array<string> = [];
     private readonly pw: Password;
+    private cfg = DEFAULT_TDT_CONFIG;
 
-    constructor(pw: Password) {
+    constructor(pw: Password, cfg: TDTMOdelConfig = {}) {
         this.pw = pw;
+        this.overWriteConfig(cfg);
         this.results.push(pw.password);
     }
 
@@ -33,11 +45,7 @@ export class TDTMethod implements PasswordFuzzerMethod {
         for (const alpha of alpaStrings) {
             this.fuzzAlpha(alpha);
         }
-        console.log({
-            numbers: this.fuzzedNumbers.length,
-            alphas: this.fuzzedAlphas.length,
-            specials: this.fuzzedSpecials.length,
-        });
+
         this.createFuzzedPasswords();
         return this.results;
     }
@@ -61,18 +69,30 @@ export class TDTMethod implements PasswordFuzzerMethod {
         const upperPwClass = calculateClass(
             this.pw.password.toUpperCase(),
         ).split("");
-        this.compinePassowords(upperPwClass);
+        const fuzzedClass = this.cfg.fuzzClass
+            ? this.fuzzClass(upperPwClass)
+            : [upperPwClass];
+
+        this.compinePassowords(fuzzedClass);
     }
-    private compinePassowords(pwClass: Array<string>) {
-        for (const classItem of pwClass) {
-            const stringsToUse = this.getStringToUse(classItem);
-            const restClass = pwClass.slice(1);
-            for (const str of stringsToUse) {
-                for (const res of this.results) {
-                    this.results.push(res + str);
-                }
-            }
+    private compinePassowords(pwClass: Array<Array<string>>) {
+        const replaced = pwClass.map((pwClass) =>
+            pwClass.map((classItem) => this.getStringToUse(classItem)),
+        );
+        for (const fuzzedPwClass of replaced) {
+            const res = fuzzedPwClass.reduce((acc, curr) => {
+                if (acc.length === 0) return curr;
+                return acc.flatMap((x) => curr.map((y) => x + y));
+            }, [] as Array<string>);
+            this.results.push(...res);
         }
+    }
+    /**
+     * This method is used to fuzz the password class,
+     * @param pwClass Class of the password as individual chars
+     */
+    private fuzzClass(pwClass: Array<string>) {
+        return [pwClass];
     }
 
     private fuzzNumber(str: string) {
@@ -110,9 +130,12 @@ export class TDTMethod implements PasswordFuzzerMethod {
                 ? this.fuzzedAlphas
                 : raiseError("Class not found");
     }
+    private overWriteConfig(cfg: TDTMOdelConfig) {
+        this.cfg = { ...this.cfg, ...cfg };
+    }
 }
 
-const POPULAR_NUMBER_PARTS = ["12", "13", "11", "22", "23", "07"];
+const POPULAR_NUMBER_PARTS = ["1", "12", "13", "11", "22", "23", "07"];
 const POPULAR_SPEZIAL_PARTS = ["!", ".", "*", "@", "$", "-", "?", "(", ")"];
 
 function raiseError(message: string): never {

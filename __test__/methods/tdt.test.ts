@@ -4,15 +4,22 @@ import { Password } from "@/password";
 import { TDTMethod } from "@/methods/tdt";
 
 const testConfig = {
-    password: "Password1",
-    alpaStrings: ["Password"],
+    password: "password1",
+    alpaStrings: ["password"],
     rest: { numbers: ["1"], spezials: [] },
-    fuzzed: ["password", "PASSWORD", "password1", "PASSWORD1", "password123"],
+    fuzzed: [
+        "password",
+        "PASSWORD",
+        "password1",
+        "PASSWORD1",
+        "password123",
+        "Password12",
+    ],
 };
 
 const fuzzer = new TDTMethod(new Password(testConfig.password));
 
-describe("TDT Modell", () => {
+describe("TDT Model", () => {
     test("Creation", () => {
         expect(fuzzer).toBeDefined();
     });
