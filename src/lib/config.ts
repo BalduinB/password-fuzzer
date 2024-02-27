@@ -20,3 +20,28 @@ export function getGroupMask(group: CharGroup) {
 
 export const MIN_LENGTH = 7;
 export const MAX_LENGTH = 11;
+
+export const LEET_MAP: Record<string, Array<string>> = {
+    o: ["0"],
+    a: ["4", "@"],
+    s: ["$"],
+    i: ["1"],
+    e: ["3"],
+    t: ["7"],
+};
+
+export function isLeetalble(c: string) {
+    c = c.toLowerCase();
+    return c in LEET_MAP || Object.values(LEET_MAP).some((v) => v.includes(c));
+}
+export function getLeetedChars(char: string) {
+    char = char.toLowerCase();
+
+    const leetChars = LEET_MAP[char];
+    if (leetChars) return leetChars;
+
+    return Object.entries(LEET_MAP).reduce((possibleReplacements, [k, v]) => {
+        if (v.includes(char)) possibleReplacements.push(k);
+        return possibleReplacements;
+    }, [] as Array<string>);
+}
