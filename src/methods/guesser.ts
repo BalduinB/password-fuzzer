@@ -2,11 +2,6 @@ import { getLeetedChars } from "@/lib/config";
 import { Password } from "@/password";
 import { PasswordFuzzerMethod } from "@/types/fuzzer";
 
-/** This classs implements the guessing method from `The Tangled Web of Password Reuse`
- * @link{https://jbonneau.com/doc/DBCBW14-NDSS-tangled_web.pdf}
- * @implements PasswordFuzzerMethod
- */
-
 type GuesserConfig = {
     leetAlphabet?: boolean;
 };
@@ -14,6 +9,9 @@ type GuesserConfig = {
 const DEFAULT_GUESSER_CONFIG: GuesserConfig = {
     leetAlphabet: false,
 };
+/** This classs implements the guessing method from `The Tangled Web of Password Reuse`
+ * @link{https://jbonneau.com/doc/DBCBW14-NDSS-tangled_web.pdf}
+ */
 export class GuesserMethod implements PasswordFuzzerMethod {
     private results: Array<string> = [];
     private readonly pw: Password;

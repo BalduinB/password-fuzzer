@@ -1,4 +1,3 @@
-import { shuffle } from "@/lib/arr";
 import { calculateClass } from "@/lib/password";
 import {
     expandNumberSequence,
@@ -17,7 +16,6 @@ const DEFAULT_TDT_CONFIG: TDTMOdelConfig = {
 };
 /** This class implememnts methods from the TDT Modell found in `Password cracking based on learned patterns from disclosed passwords`
  * @link{https://core.ac.uk/download/pdf/225229085.pdf}
- * @implements PasswordFuzzerMethod
  */
 export class TDTMethod implements PasswordFuzzerMethod {
     private results: Array<string> = [];
