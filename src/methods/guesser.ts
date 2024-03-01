@@ -1,4 +1,5 @@
-import { getLeetedChars } from "@/lib/config";
+import { MAX_LENGTH, MIN_LENGTH, getLeetedChars } from "@/lib/config";
+import { fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
 import { Password } from "@/password";
 import { PasswordFuzzerMethod } from "@/types/fuzzer";
 
@@ -24,22 +25,35 @@ export class GuesserMethod implements PasswordFuzzerMethod {
     }
 
     fuzz() {
+        this.fuzzKBSequenzes();
+        if (this.pw.password.length > MIN_LENGTH) this.delete();
+        if (this.pw.password.length < MAX_LENGTH) this.insert();
+        this.capitalize();
+        this.reverse();
+        this.leet();
         return this.results;
     }
 
-    private leetAlphabet() {
+    private overWriteConfig(cfg: GuesserConfig) {
+        this.cfg = { ...this.cfg, ...cfg };
+    }
+    private delete() {}
+    private fuzzKBSequenzes() {
+        const results = fuzzKeyboardSquenz(this.pw.password);
+        this.results.push(...results);
+    }
+    private insert() {}
+    private capitalize() {}
+    private reverse() {
+        this.results.push(this.pw.password.split("").reverse().join(""));
+    }
+    private leet() {
         const charSet = new Set(this.pw.password.split(""));
         const leetAlphabet = new Map<string, Array<string>>();
         for (const c of charSet) {
             leetAlphabet.set(c, getLeetedChars(c));
         }
     }
-
-    private reverse<T>(arr: Array<T>) {
-        return arr.toReversed();
-    }
-
-    private overWriteConfig(cfg: GuesserConfig) {
-        this.cfg = { ...this.cfg, ...cfg };
-    }
+    private moveSubString() {}
+    private moveSubWord() {}
 }

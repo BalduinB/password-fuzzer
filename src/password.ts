@@ -1,12 +1,8 @@
-import { CharGroup, MAX_LENGTH, MIN_LENGTH, getGroupMask } from "./lib/config";
+import { MAX_LENGTH, MIN_LENGTH, getGroupMask } from "./lib/config";
 import {
     calculateClass,
     calculateElements,
     calculateMask,
-    isLowerCase,
-    isNumber,
-    isSymbol,
-    isUpperCase,
 } from "./lib/password";
 
 export class Password {
