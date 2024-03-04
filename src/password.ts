@@ -18,6 +18,15 @@ export class Password {
     hasNumbers() {
         return this.getMask().includes(getGroupMask("numbers"));
     }
+    indexesOf(str: string) {
+        const indexes: Array<number> = [];
+        for (let i = 0; i < this.password.length; i++) {
+            if (this.password[i] === str) {
+                indexes.push(i);
+            }
+        }
+        return indexes;
+    }
     isTooShort() {
         return this.password.length < MIN_LENGTH;
     }
@@ -48,6 +57,6 @@ export class Password {
             elements = calculateElements(this.password);
             this.elements = elements;
         }
-        return elements;
+        return [...elements];
     }
 }

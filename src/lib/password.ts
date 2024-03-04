@@ -8,28 +8,36 @@ import {
 } from "./config";
 
 export function isUpperCase(char: string) {
-    return uppercase.includes(char);
+    return char.toUpperCase() === char && char.toLowerCase() !== char;
 }
 
 export function isLowerCase(char: string) {
-    return lowercase.includes(char);
+    return char.toLowerCase() === char && char.toUpperCase() !== char;
 }
 
-export function isNumber(char: string) {
+export function isNumberChar(char: string) {
     return numbers.includes(char);
 }
+export function isNumberStr(str: string) {
+    return !isNaN(Number(str));
+}
 
-export function isSymbol(char: string) {
+export function isSymbolChar(char: string) {
     return symbols.includes(char);
 }
+
+export function isSymbolStr(str: string) {
+    return str.split("").every((char) => symbols.includes(char));
+}
+
 export function calculateMask(pw: string) {
     let mask = "";
     for (const char of pw) {
         let group: CharGroup;
         if (isUpperCase(char)) group = "uppercase";
         else if (isLowerCase(char)) group = "lowercase";
-        else if (isNumber(char)) group = "numbers";
-        else if (isSymbol(char)) group = "symbols";
+        else if (isNumberChar(char)) group = "numbers";
+        else if (isSymbolChar(char)) group = "symbols";
         else group = "unknown";
         mask += getGroupMask(group);
     }

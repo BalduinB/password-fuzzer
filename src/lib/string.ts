@@ -41,3 +41,7 @@ export function upperFirst(str: string) {
     if (!first) return false;
     return first.toUpperCase() + restStr.toLowerCase();
 }
+
+export function removeCharAt(str: string, index: number) {
+    return str.slice(0, index) + str.slice(index + 1);
+}

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { Password } from "@/password";
+import { shuffle } from "@/lib/array";
 
 const testConfig = {
     password: "Password123%",
@@ -22,6 +23,7 @@ describe("Password", () => {
         expect(pw.getClass()).eq(testConfig.class);
     });
     test("Elements", () => {
-        expect(pw.getElements()).toEqual(testConfig.elements);
+        const elements = pw.getElements();
+        expect(elements).toEqual(testConfig.elements);
     });
 });

@@ -1,7 +1,9 @@
+import { QWERTZ_KEYBOARD } from "./config";
+type DirOffsets = 0 | 1 | -1;
 export function keyboardSequenzDirection(str: string) {
     const keyboardIndexes = keyboardIndexesFromStr(str);
 
-    let direction = null as [number, number] | null;
+    let direction = null as { colOff: DirOffsets; rowOff: DirOffsets } | null;
     let invalid = false;
     let i = 0;
     for (const current of keyboardIndexes) {
@@ -19,9 +21,8 @@ export function keyboardSequenzDirection(str: string) {
         if (!direction) {
             let found = false;
             for (const currDir of DIRS) {
-                const [rowOffset, colOffset] = currDir;
-                const matchingCol = next.colI === current.colI + colOffset;
-                const matchingRow = next.rowI === current.rowI + rowOffset;
+                const matchingCol = next.colI === current.colI + currDir.colOff;
+                const matchingRow = next.rowI === current.rowI + currDir.rowOff;
                 if (matchingCol && matchingRow) {
                     direction = currDir;
                     found = true;
@@ -35,9 +36,8 @@ export function keyboardSequenzDirection(str: string) {
             continue;
         }
 
-        const [rowOffset, colOffset] = direction;
-        const matchingCol = next.colI === current.colI + colOffset;
-        const matchingRow = next.rowI === current.rowI + rowOffset;
+        const matchingCol = next.colI === current.colI + direction.colOff;
+        const matchingRow = next.rowI === current.rowI + direction.rowOff;
 
         if (!matchingCol || !matchingRow) {
             invalid = true;
@@ -47,39 +47,51 @@ export function keyboardSequenzDirection(str: string) {
     return invalid ? null : direction;
 }
 
-export function fuzzKeyboardSquenz(str: string, offset = 2) {
+export function fuzzKeyboardSquenz(
+    str: string,
+    keyboad = QWERTZ_KEYBOARD,
+    offset = 2,
+) {
     const keyboardIndexes = keyboardIndexesFromStr(str);
     const dirOfSequenz = keyboardSequenzDirection(str);
-
     if (!dirOfSequenz) return [];
-    const [rowOffset, colOffset] = dirOfSequenz;
 
-    const fuzzDir: "row" | "col" = rowOffset === 0 ? "row" : "col";
+    const fuzzDir: "row" | "col" = dirOfSequenz.rowOff === 0 ? "row" : "col";
     const fuzzColIdxMultipl = fuzzDir === "col" ? 1 : 0;
     const fuzzRowIdxMultipl = fuzzDir === "row" ? 1 : 0;
 
     const results: Array<string> = [];
-    for (let index = 1; index <= offset; index++) {
-        const result = keyboardIndexes
-            .map((indexes) => {
-                if (!indexes) return null;
-                const colIdx = indexes.colI + fuzzColIdxMultipl * index;
-                const rowIdx = indexes.rowI + fuzzRowIdxMultipl * index;
-                return QWERTZ_KEYBOARD[rowIdx]?.[colIdx];
-            })
-            .join("");
-        results.push(result);
+    const maxColLength = maxKeyBoardRowLength(keyboad);
+    const maxRowLength = maxKeyBoardColLength(keyboad);
+    function clampRowIdx(rowIdx: number) {
+        if (rowIdx < 0) rowIdx = maxRowLength + rowIdx;
+        return rowIdx % maxRowLength;
+    }
+    function clampColIdx(colIdx: number) {
+        if (colIdx < 0) colIdx = maxColLength + colIdx;
+        return colIdx % maxColLength;
+    }
+    if (keyboardIndexes.includes(null)) return results;
+    for (let index = -offset; index <= offset; index++) {
+        if (index === 0) continue;
+
+        const result = keyboardIndexes.map((indexes) => {
+            //should not happen, because we already checked for null
+            if (!indexes) return null;
+
+            let colIdx = indexes.colI + fuzzColIdxMultipl * index;
+            let rowIdx = indexes.rowI + fuzzRowIdxMultipl * index;
+            colIdx = clampColIdx(colIdx);
+            rowIdx = clampRowIdx(rowIdx);
+
+            return keyboad[rowIdx]?.[colIdx];
+        });
+        if (result.includes(null) || result.includes(undefined)) continue;
+        results.push(result.join(""));
     }
 
-    return results;
+    return Array.from(new Set(results));
 }
-
-const QWERTZ_KEYBOARD = [
-    "1234567890ß".split(""),
-    "qwertzuiopü".split(""),
-    "asdfghjklöä".split(""),
-    "yxcvbnm,.-".split(""),
-];
 
 function keyboardIndexesFromStr(str: string) {
     return str
@@ -93,9 +105,16 @@ function keyboardIndexesFromStr(str: string) {
         });
 }
 
-const DIRS: Array<[number, number]> = [
-    [-1, 0],
-    [1, 0],
-    [0, -1],
-    [0, 1],
+const DIRS: Array<{ colOff: DirOffsets; rowOff: DirOffsets }> = [
+    { colOff: -1, rowOff: 0 },
+    { colOff: 1, rowOff: 0 },
+    { colOff: 0, rowOff: -1 },
+    { colOff: 0, rowOff: 1 },
 ];
+
+function maxKeyBoardRowLength(kb: Array<Array<string>>) {
+    return kb.reduce((max, row) => (row.length > max ? row.length : max), 0);
+}
+function maxKeyBoardColLength(kb: Array<Array<string>>) {
+    return kb.length;
+}

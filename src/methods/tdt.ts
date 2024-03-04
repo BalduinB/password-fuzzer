@@ -15,6 +15,12 @@ const DEFAULT_TDT_CONFIG: TDTMOdelConfig = {
     fuzzClass: false,
 };
 /** This class implememnts methods from the TDT Modell found in `Password cracking based on learned patterns from disclosed passwords`
+ *
+ * Fuzzing Workflow:
+ * 1. Fuzz Alphastrings (alphanumeric parts)
+ * 2. Fuzz Numbers
+ * 3. Fuzz Specials
+ *
  * @link{https://core.ac.uk/download/pdf/225229085.pdf}
  */
 export class TDTMethod implements PasswordFuzzerMethod {
@@ -35,13 +41,18 @@ export class TDTMethod implements PasswordFuzzerMethod {
         const alpaStrings = this.getAlphaElements();
         const rest = this.getRestElements();
 
+        for (const alpha of alpaStrings) {
+            this.fuzzAlpha(alpha);
+        }
+
+        if (!rest.numbers.length) rest.numbers.push(...POPULAR_NUMBER_PARTS);
         for (const number of rest.numbers) {
             this.fuzzNumber(number);
         }
-        this.enshureSpezials();
 
-        for (const alpha of alpaStrings) {
-            this.fuzzAlpha(alpha);
+        if (!rest.spezials.length) rest.spezials.push(...POPULAR_SPEZIAL_PARTS);
+        for (const spezial of rest.spezials) {
+            this.fuzzSpecial(spezial);
         }
 
         this.createFuzzedPasswords();
@@ -49,15 +60,15 @@ export class TDTMethod implements PasswordFuzzerMethod {
     }
 
     getAlphaElements() {
-        const res = this.pw.password.match(/[a-zA-Z]+/g);
-
-        return res || [];
+        return Array.from(this.pw.password.match(/[a-zA-Z]+/g) ?? []);
     }
 
     getRestElements() {
-        const spezials = this.pw.password.match(/[^a-zA-Z0-9]+/g) ?? [];
-        const numbers =
-            this.pw.password.match(/[0-9]+/g) ?? POPULAR_NUMBER_PARTS;
+        let spezials = Array.from(
+            this.pw.password.match(/[^a-zA-Z0-9]+/g) ?? [],
+        );
+
+        let numbers = Array.from(this.pw.password.match(/[0-9]+/g) ?? []);
 
         return { spezials, numbers };
     }
@@ -115,8 +126,8 @@ export class TDTMethod implements PasswordFuzzerMethod {
         }
     }
 
-    private enshureSpezials() {
-        this.fuzzedSpecials.push(...POPULAR_SPEZIAL_PARTS);
+    private fuzzSpecial(str: string) {
+        this.fuzzedSpecials.push(str);
     }
 
     private getStringToUse(classItem: string) {
