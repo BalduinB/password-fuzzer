@@ -1,4 +1,4 @@
-import { fuzz } from "@/index";
+import { fuzzKeyed } from "@/index";
 import { describe, expect, test } from "vitest";
 
 const testConfig = {
@@ -28,7 +28,7 @@ const testConfig = {
 };
 
 describe("fuzz abstraction", () => {
-    const res = fuzz(testConfig.password);
+    const res = fuzzKeyed(testConfig.password);
     test("defined", () => {
         expect(res).toBeDefined();
     });

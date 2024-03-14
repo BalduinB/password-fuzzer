@@ -9,8 +9,8 @@ export class Password {
     private mask?: string;
     private class?: string;
     private elements?: Array<string>;
-
     constructor(public readonly password: string) {}
+
     hasSpecialChar() {
         return this.getMask().includes(getGroupMask("symbols"));
     }
@@ -18,10 +18,10 @@ export class Password {
     hasNumbers() {
         return this.getMask().includes(getGroupMask("numbers"));
     }
-    indexesOf(str: string) {
+    indexesOf(char: string) {
         const indexes: Array<number> = [];
         for (let i = 0; i < this.password.length; i++) {
-            if (this.password[i] === str) {
+            if (this.password[i] === char) {
                 indexes.push(i);
             }
         }
@@ -32,6 +32,12 @@ export class Password {
     }
     isTooLong() {
         return this.password.length > MAX_LENGTH;
+    }
+    isAlphabeticOnly() {
+        return (
+            !this.getClass().includes(getGroupMask("numbers")) &&
+            !this.getClass().includes(getGroupMask("symbols"))
+        );
     }
     getMask() {
         let mask = this.mask;

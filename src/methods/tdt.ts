@@ -4,6 +4,7 @@ import {
     isNumberSequence,
     isOnlyFirstCharUpper,
     onlyFirstCharUpper,
+    onlyLastCharUpper,
 } from "@/lib/string";
 import { Password } from "@/password";
 import { PasswordFuzzerMethod } from "@/types/fuzzer";
@@ -12,7 +13,7 @@ type TDTMOdelConfig = {
     fuzzClass?: boolean;
 };
 const DEFAULT_TDT_CONFIG: TDTMOdelConfig = {
-    fuzzClass: false,
+    fuzzClass: true,
 };
 /** This class implememnts methods from the TDT Modell found in `Password cracking based on learned patterns from disclosed passwords`
  *
@@ -20,7 +21,7 @@ const DEFAULT_TDT_CONFIG: TDTMOdelConfig = {
  * 1. Fuzz Alphastrings (alphanumeric parts)
  * 2. Fuzz Numbers
  * 3. Fuzz Specials
- *
+ * 4. Combine all fuzzed parts as Password Class defines
  * @link{https://core.ac.uk/download/pdf/225229085.pdf}
  */
 export class TDTMethod implements PasswordFuzzerMethod {
@@ -56,14 +57,14 @@ export class TDTMethod implements PasswordFuzzerMethod {
         }
 
         this.createFuzzedPasswords();
-        return this.results;
+        return Array.from(new Set(this.results));
     }
 
-    getAlphaElements() {
+    private getAlphaElements() {
         return Array.from(this.pw.password.match(/[a-zA-Z]+/g) ?? []);
     }
 
-    getRestElements() {
+    private getRestElements() {
         let spezials = Array.from(
             this.pw.password.match(/[^a-zA-Z0-9]+/g) ?? [],
         );
@@ -75,6 +76,7 @@ export class TDTMethod implements PasswordFuzzerMethod {
     private createFuzzedPasswords() {
         this.results.push(...this.fuzzedAlphas);
 
+        // Upper case class so the Alpha Strings are represented as Uppercase
         const upperPwClass = calculateClass(
             this.pw.password.toUpperCase(),
         ).split("");
@@ -84,6 +86,7 @@ export class TDTMethod implements PasswordFuzzerMethod {
 
         this.compinePassowords(fuzzedClass);
     }
+
     private compinePassowords(pwClass: Array<Array<string>>) {
         const replaced = pwClass.map((pwClass) =>
             pwClass.map((classItem) => this.getStringToUse(classItem)),
@@ -96,12 +99,13 @@ export class TDTMethod implements PasswordFuzzerMethod {
             this.results.push(...res);
         }
     }
-    /**
-     * This method is used to fuzz the password class,
-     * @param pwClass Class of the password as individual chars
-     */
+
     private fuzzClass(pwClass: Array<string>) {
-        return [pwClass];
+        // Based on the Top 15 most common classes
+        const fuzzed = [pwClass];
+        if (this.pw.isAlphabeticOnly())
+            fuzzed.push([...pwClass, "N"], ["N", ...pwClass]);
+        return fuzzed;
     }
 
     private fuzzNumber(str: string) {
@@ -121,9 +125,9 @@ export class TDTMethod implements PasswordFuzzerMethod {
         this.fuzzedAlphas.push(lower);
         this.fuzzedAlphas.push(upper);
 
-        if (!isOnlyFirstCharUpper(str)) {
-            this.fuzzedAlphas.push(onlyFirstCharUpper(str));
-        }
+        this.fuzzedAlphas.push(onlyFirstCharUpper(str));
+        this.fuzzedAlphas.push(onlyLastCharUpper(str));
+        this.fuzzedAlphas = Array.from(new Set(this.fuzzedAlphas));
     }
 
     private fuzzSpecial(str: string) {

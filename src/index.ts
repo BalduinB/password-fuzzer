@@ -3,13 +3,13 @@ import { GuesserMethod } from "./methods/guesser";
 import { TDTMethod } from "./methods/tdt";
 import { Password } from "./password";
 
+export function fuzzKeyed(pw: string) {
+    const fuzzer = getDefaultFuzzer(pw);
+    return fuzzer.fuzzKeyed();
+}
 export function fuzz(pw: string) {
     const fuzzer = getDefaultFuzzer(pw);
-    return fuzzer.fuzzAll();
-}
-export function fuzzFlat(pw: string) {
-    const fuzzer = getDefaultFuzzer(pw);
-    return fuzzer.fuzzAllFlat();
+    return fuzzer.fuzz();
 }
 
 function getDefaultFuzzer(pw: string) {

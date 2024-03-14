@@ -28,11 +28,18 @@ export function isOnlyFirstCharUpper(str: string) {
 }
 
 export function onlyFirstCharUpper(str: string) {
-    const [first, ...rest] = str;
+    const lowered = str.toLocaleLowerCase();
+    const [first, ...rest] = lowered;
     if (!first) return "";
     const restStr = rest.join("");
 
     return first.toUpperCase() + restStr.toLowerCase();
+}
+export function onlyLastCharUpper(str: string) {
+    return onlyFirstCharUpper(str.split("").reverse().join(""))
+        .split("")
+        .reverse()
+        .join("");
 }
 
 export function upperFirst(str: string) {

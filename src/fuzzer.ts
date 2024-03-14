@@ -12,14 +12,14 @@ export class Fuzzer {
 
         return this;
     }
-    fuzzAll() {
+    fuzzKeyed() {
         const result = this.methods.map(({ cls, key }) => ({
             key,
-            fuzzed: cls.fuzz(),
+            generated: cls.fuzz(),
         }));
         return result;
     }
-    fuzzAllFlat() {
+    fuzz() {
         return this.methods.map(({ cls }) => cls.fuzz());
     }
 }
