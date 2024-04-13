@@ -1,8 +1,7 @@
 import { describe, expect, test } from "vitest";
 
-import { Password } from "@/password";
 import { Fuzzer } from "@/fuzzer";
-import { TDTMethod, fuzzKeyed } from "@/index";
+import { fuzzKeyed } from "@/index";
 
 const testConfig = { password1: "Password", password2: "asdf" };
 

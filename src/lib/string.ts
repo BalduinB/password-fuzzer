@@ -4,7 +4,7 @@ export function isNumberSequence(str: string) {
         .map((n) => parseInt(n))
         .every((num, idx, arr) => idx === 0 || num - 1 === arr[idx - 1]);
 }
-export function expandNumberSequence(str: string, iterations = 5) {
+export function expandNumberSequence(str: string, iterations = 3) {
     const numbersOfstr = str.split("").map((n) => parseInt(n));
 
     const maxNumber = Math.max(...numbersOfstr);
@@ -20,6 +20,15 @@ export function expandNumberSequence(str: string, iterations = 5) {
     return results;
 }
 
+export function countUp(str: string, iterations = 3) {
+    const number = +str;
+    const results: Array<string> = [];
+    for (let i = 1; i <= iterations; i++) {
+        results.push((number + i).toString());
+        if (number - i > 0) results.push((number - i).toString());
+    }
+    return results;
+}
 export function isOnlyFirstCharUpper(str: string) {
     const [first, ...rest] = str;
     const restStr = rest.join("");
@@ -52,3 +61,5 @@ export function upperFirst(str: string) {
 export function removeCharAt(str: string, index: number) {
     return str.slice(0, index) + str.slice(index + 1);
 }
+
+export const isValidLatinString = new RegExp(/^[\x00-\xFF\s]*$/g);

@@ -20,14 +20,7 @@ const testConfig2 = {
     password: "password",
     alpaStrings: ["password"],
     rest: { numbers: [], spezials: [] },
-    fuzzed: [
-        "password",
-        "PASSWORD",
-        "password1",
-        "PASSWORD1",
-        "password123",
-        "Password12",
-    ],
+    fuzzed: ["password", "PASSWORD", "password1", "PASSWORD1", "Password12"],
     fuzzedAlphas: ["password", "PASSWORD", "Password", "passworD"],
 };
 

@@ -1,10 +1,10 @@
 import { getGroupMask } from "@/lib/config";
+import { raiseError } from "@/lib/error";
+import { fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
 import { calculateClass } from "@/lib/password";
 import {
-    countUp,
     expandNumberSequence,
     isNumberSequence,
-    isOnlyFirstCharUpper,
     onlyFirstCharUpper,
     onlyLastCharUpper,
 } from "@/lib/string";
@@ -17,44 +17,44 @@ type TDTMOdelConfig = {
 const DEFAULT_TDT_CONFIG: TDTMOdelConfig = {
     fuzzClass: true,
 };
-/** This class implememnts methods from the TDT Modell found in `Password cracking based on learned patterns from disclosed passwords`
+/** This class uses a mix of both `Guesser` and `TDT` Method to optimize the fuzzing process
  *
  * Fuzzing Workflow:
  * 1. Fuzz Alphastrings (alphanumeric parts)
  * 2. Fuzz Numbers
- * 3. Fuzz Specials
+ * 3. Fuzz Special
  * 4. Combine all fuzzed parts as Password Class defines
  * @link{https://core.ac.uk/download/pdf/225229085.pdf}
  */
-export class TDTMethod implements PasswordFuzzerMethod {
+export class OurMethod implements PasswordFuzzerMethod {
     private results: Array<string> = [];
     private fuzzedNumbers: Array<string> = [];
     private fuzzedAlphas: Array<string> = [];
     private fuzzedSpecials: Array<string> = [];
     private readonly pw: Password;
-    private cfg = DEFAULT_TDT_CONFIG;
 
-    constructor(pw: Password, cfg: TDTMOdelConfig = {}) {
+    constructor(pw: Password) {
         this.pw = pw;
-        this.overWriteConfig(cfg);
         this.results.push(pw.password);
     }
 
     fuzz() {
         const alpaStrings = this.getAlphaElements();
-        const { numbers, spezials } = this.getRestElements();
+        const rest = this.getRestElements();
+
+        this.keyboardSquenzes();
 
         for (const alpha of alpaStrings) {
             this.fuzzAlpha(alpha);
         }
 
-        for (const number of numbers) {
+        if (!rest.numbers.length) rest.numbers.push(...POPULAR_NUMBER_PARTS);
+        for (const number of rest.numbers) {
             this.fuzzNumber(number);
         }
-        if (!numbers.length) this.fuzzedNumbers.push(...POPULAR_NUMBER_PARTS);
 
-        if (!spezials.length) spezials.push(...POPULAR_SINGLE_SPEZIAL_PARTS);
-        for (const spezial of spezials) {
+        if (!rest.spezials.length) rest.spezials.push(...POPULAR_SPEZIAL_PARTS);
+        for (const spezial of rest.spezials) {
             this.fuzzSpecial(spezial);
         }
 
@@ -62,6 +62,23 @@ export class TDTMethod implements PasswordFuzzerMethod {
         return Array.from(new Set(this.results));
     }
 
+    private keyboardSquenzes() {
+        const elements = this.pw.getElements();
+        for (const element of elements) {
+            const group = this.pw.getGroupOfElement(element);
+            const results = fuzzKeyboardSquenz(element);
+            if (group === getGroupMask("symbols")) {
+                this.fuzzedSpecials.push(...results);
+            } else if (group === getGroupMask("numbers")) {
+                this.fuzzedNumbers.push(...results);
+            } else if (
+                group === getGroupMask("lowercase") ||
+                group === getGroupMask("uppercase")
+            ) {
+                this.fuzzedAlphas.push(...results);
+            }
+        }
+    }
     private getAlphaElements() {
         return Array.from(this.pw.password.match(/[a-zA-Z]+/g) ?? []);
     }
@@ -82,9 +99,8 @@ export class TDTMethod implements PasswordFuzzerMethod {
         const upperPwClass = calculateClass(
             this.pw.password.toUpperCase(),
         ).split("");
-        const fuzzedClass = this.cfg.fuzzClass
-            ? this.fuzzClass(upperPwClass)
-            : [upperPwClass];
+
+        const fuzzedClass = this.fuzzClass(upperPwClass);
 
         this.compinePassowords(fuzzedClass);
     }
@@ -109,7 +125,6 @@ export class TDTMethod implements PasswordFuzzerMethod {
             fuzzed.push(
                 [...pwClass, getGroupMask("numbers")],
                 [getGroupMask("numbers"), ...pwClass],
-                [...pwClass, getGroupMask("symbols")],
             );
         return fuzzed;
     }
@@ -117,24 +132,10 @@ export class TDTMethod implements PasswordFuzzerMethod {
     private fuzzNumber(str: string) {
         this.fuzzedNumbers.push(str);
 
-        // Based on the number string length (Table 5)
-        if (isNumberSequence(str) && str.length < 4) {
-            const expanded = expandNumberSequence(
-                str,
-                Math.min(4, 4 - str.length),
-            );
+        if (isNumberSequence(str)) {
+            const expanded = expandNumberSequence(str);
             this.fuzzedNumbers.push(...expanded);
-
-            const removed: Array<string> = [];
-            const chars = str.split("");
-            while (chars.length > 0) {
-                chars.pop();
-                removed.push(chars.join(""));
-            }
-            this.fuzzedNumbers.push(...removed);
         }
-        const counted = countUp(str);
-        this.fuzzedNumbers.push(...counted);
     }
 
     private fuzzAlpha(str: string) {
@@ -163,15 +164,7 @@ export class TDTMethod implements PasswordFuzzerMethod {
                 ? this.fuzzedAlphas
                 : raiseError("Class not found");
     }
-    private overWriteConfig(cfg: TDTMOdelConfig) {
-        this.cfg = { ...this.cfg, ...cfg };
-    }
 }
 
 const POPULAR_NUMBER_PARTS = ["1", "12", "13", "11", "22", "23", "07"];
-// Based on the most common special characters (Table 8)
-const POPULAR_SINGLE_SPEZIAL_PARTS = ["!", ".", "*", "@"];
-
-function raiseError(message: string): never {
-    throw new Error(message);
-}
+const POPULAR_SPEZIAL_PARTS = ["!", ".", "*", "@", "$", "-", "?", "(", ")"];

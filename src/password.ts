@@ -39,6 +39,9 @@ export class Password {
             !this.getClass().includes(getGroupMask("symbols"))
         );
     }
+    isNumericOnly() {
+        return !isNaN(+this.password);
+    }
     getMask() {
         let mask = this.mask;
         if (!mask) {
@@ -56,7 +59,15 @@ export class Password {
         }
         return pwClass;
     }
-
+    getGroupOfElement(element: string) {
+        if (!this.password.includes(element)) {
+            throw new Error(`Element '${element}' not in password`);
+        }
+        const maskOfChars = calculateMask(element);
+        if (maskOfChars.split("").every((char) => char === maskOfChars[0])) {
+            return maskOfChars[0]!;
+        } else throw new Error(`Element '${element}' is not a group`);
+    }
     getElements() {
         let elements = this.elements;
         if (!elements) {
