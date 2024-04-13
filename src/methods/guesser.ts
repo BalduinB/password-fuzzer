@@ -6,13 +6,6 @@ import { removeCharAt } from "@/lib/string";
 import { Password } from "@/password";
 import { PasswordFuzzerMethod } from "@/types/fuzzer";
 
-type GuesserConfig = {
-    leetAlphabet?: boolean;
-};
-
-const DEFAULT_GUESSER_CONFIG: GuesserConfig = {
-    leetAlphabet: false,
-};
 /** This classs implements the guessing method from `The Tangled Web of Password Reuse`
  *
  * Fuzzing Workflow:
@@ -31,11 +24,10 @@ const DEFAULT_GUESSER_CONFIG: GuesserConfig = {
 export class GuesserMethod implements PasswordFuzzerMethod {
     private results: Array<string> = [];
     private readonly pw: Password;
-    private cfg = DEFAULT_GUESSER_CONFIG;
 
-    constructor(pw: Password, cfg: GuesserConfig = {}) {
+    constructor(pw: Password) {
         this.pw = pw;
-        this.overWriteConfig(cfg);
+
         this.results.push(pw.password);
     }
 
@@ -50,9 +42,6 @@ export class GuesserMethod implements PasswordFuzzerMethod {
         return Array.from(new Set(this.results));
     }
 
-    private overWriteConfig(cfg: GuesserConfig) {
-        this.cfg = { ...this.cfg, ...cfg };
-    }
     private delete() {
         const elements = this.pw.getElements();
         for (let i = 0; i < elements.length; i++) {
@@ -125,9 +114,6 @@ export class GuesserMethod implements PasswordFuzzerMethod {
             shuffle(elements);
             this.results.push(elements.join(""));
         }
-    }
-    private moveSubWord() {
-        // TODO: implement
     }
 }
 const POP_SPEZIAL_CHARS = ["!", ".", "@", "$", "_", "?", "-", "#", "(", ")"];

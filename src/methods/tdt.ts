@@ -4,19 +4,12 @@ import {
     countUp,
     expandNumberSequence,
     isNumberSequence,
-    isOnlyFirstCharUpper,
     onlyFirstCharUpper,
     onlyLastCharUpper,
 } from "@/lib/string";
 import { Password } from "@/password";
 import { PasswordFuzzerMethod } from "@/types/fuzzer";
 
-type TDTMOdelConfig = {
-    fuzzClass?: boolean;
-};
-const DEFAULT_TDT_CONFIG: TDTMOdelConfig = {
-    fuzzClass: true,
-};
 /** This class implememnts methods from the TDT Modell found in `Password cracking based on learned patterns from disclosed passwords`
  *
  * Fuzzing Workflow:
@@ -32,11 +25,9 @@ export class TDTMethod implements PasswordFuzzerMethod {
     private fuzzedAlphas: Array<string> = [];
     private fuzzedSpecials: Array<string> = [];
     private readonly pw: Password;
-    private cfg = DEFAULT_TDT_CONFIG;
 
-    constructor(pw: Password, cfg: TDTMOdelConfig = {}) {
+    constructor(pw: Password) {
         this.pw = pw;
-        this.overWriteConfig(cfg);
         this.results.push(pw.password);
     }
 
@@ -82,9 +73,7 @@ export class TDTMethod implements PasswordFuzzerMethod {
         const upperPwClass = calculateClass(
             this.pw.password.toUpperCase(),
         ).split("");
-        const fuzzedClass = this.cfg.fuzzClass
-            ? this.fuzzClass(upperPwClass)
-            : [upperPwClass];
+        const fuzzedClass = this.fuzzClass(upperPwClass);
 
         this.compinePassowords(fuzzedClass);
     }
@@ -162,9 +151,6 @@ export class TDTMethod implements PasswordFuzzerMethod {
               : classItem === "U"
                 ? this.fuzzedAlphas
                 : raiseError("Class not found");
-    }
-    private overWriteConfig(cfg: TDTMOdelConfig) {
-        this.cfg = { ...this.cfg, ...cfg };
     }
 }
 
