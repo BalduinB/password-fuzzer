@@ -40,7 +40,7 @@ export class Password {
         );
     }
     isNumericOnly() {
-        return !isNaN(+this.password);
+        return !isNaN(+this.password) && Number.isInteger(+this.password);
     }
     getMask() {
         let mask = this.mask;

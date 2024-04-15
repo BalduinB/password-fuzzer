@@ -1,7 +1,6 @@
 import { shuffle } from "@/lib/array";
-import { getLeetedChars } from "@/lib/config";
 import { fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
-import { isNumberStr, isSymbolStr } from "@/lib/password";
+import { isNumberStr, isSymbolStr, isUpperCase } from "@/lib/password";
 import { removeCharAt } from "@/lib/string";
 import { Password } from "@/password";
 import { PasswordFuzzerMethod } from "@/types/fuzzer";
@@ -33,8 +32,8 @@ export class GuesserMethod implements PasswordFuzzerMethod {
 
     fuzz() {
         this.keyboardSquenzes();
-        if (!this.pw.isTooShort()) this.delete();
-        if (!this.pw.isTooLong()) this.insert();
+        this.delete();
+        this.insert();
         this.capitalize();
         this.reverse();
         this.leet();
@@ -42,49 +41,66 @@ export class GuesserMethod implements PasswordFuzzerMethod {
         return Array.from(new Set(this.results));
     }
 
-    private delete() {
+    private keyboardSquenzes() {
         const elements = this.pw.getElements();
-        for (let i = 0; i < elements.length; i++) {
-            const element = elements[i];
+        for (const element of elements) {
+            if (element.length <= 1) continue;
+            const results = fuzzKeyboardSquenz(element);
+            this.results.push(...results);
+        }
+    }
+
+    private delete() {
+        if (this.pw.isTooShort()) return;
+
+        const allElements = this.pw.getElements();
+
+        for (let i = 0; i < allElements.length; i++) {
+            const element = allElements[i];
             if (!element) continue;
-            if (isNumberStr(element) || isSymbolStr(element)) {
-                for (let j = 0; j < element.length; j++) {
-                    const newElement = removeCharAt(element, j);
-                    const newElements = [...elements];
-                    newElements[i] = newElement;
-                    this.results.push(newElements.join(""));
-                }
+            const isDeleteable = [isNumberStr, isSymbolStr, isUpperCase].some((fn) => fn(element));
+            if (!isDeleteable) continue;
+
+            for (let j = 0; j < element.length; j++) {
+                const newElement = removeCharAt(element, j);
+                this.results.push(allElements.with(i, newElement).join(""));
             }
         }
     }
-    private keyboardSquenzes() {
-        const results = fuzzKeyboardSquenz(this.pw.password);
-        this.results.push(...results);
-    }
+
     private insert() {
+        if (this.pw.isTooLong()) return;
+
         if (!this.pw.hasSpecialChar()) {
             for (const char of POP_SPEZIAL_CHARS) {
-                this.results.push(this.pw.password + char);
-                this.results.push(char + this.pw.password);
+                this.results.push(...this.addToStartAndEnd(this.pw.password, char));
             }
         }
         if (!this.pw.hasNumbers()) {
             for (let i = 0; i < 10; i++) {
-                this.results.push(this.pw.password + i);
-                this.results.push(i + this.pw.password);
+                this.results.push(...this.addToStartAndEnd(this.pw.password, i));
             }
         }
+        //Top 3 Bigrams and Trigrams
+        const nGrams = ["08", "01", "07", "123", "087", "007"];
+        for (const nGram of nGrams) {
+            this.results.push(...this.addToStartAndEnd(this.pw.password, nGram));
+        }
+    }
+    private addToStartAndEnd(base: string, toAdd: string | number) {
+        return [toAdd + base, base + toAdd];
     }
     private capitalize() {
-        this.results.push(this.pw.password.toUpperCase());
-        let uppered =
+        const uppered = this.pw.password.toUpperCase();
+        const upperedFirst = this.pw.password.slice(0, 1).toUpperCase() + this.pw.password.slice(1);
+        const upperedLast =
+            this.pw.password.slice(0, -1) + this.pw.password.slice(-1).toUpperCase();
+        const upperFirstandLast =
             this.pw.password.slice(0, 1).toUpperCase() +
-            this.pw.password.slice(1);
-        this.results.push(uppered);
-        uppered =
-            this.pw.password.slice(0, -1) +
+            this.pw.password.slice(1, -1) +
             this.pw.password.slice(-1).toUpperCase();
-        this.results.push(uppered);
+
+        this.results.push(uppered, upperedFirst, upperedLast, upperFirstandLast);
     }
     private reverse() {
         this.results.push(this.pw.password.split("").reverse().join(""));
@@ -96,8 +112,8 @@ export class GuesserMethod implements PasswordFuzzerMethod {
             leetAlphabet.set(c, getLeetedChars(c));
         }
         for (const [char, leet] of leetAlphabet) {
-            const indexesOfChar = this.pw.indexesOf(char);
-            for (const index of indexesOfChar) {
+            const idxsOfChar = this.pw.indexesOf(char);
+            for (const index of idxsOfChar) {
                 for (const leetChar of leet) {
                     let newPw =
                         this.pw.password.slice(0, index) +
@@ -111,9 +127,34 @@ export class GuesserMethod implements PasswordFuzzerMethod {
     private moveSubString() {
         const elements = this.pw.getElements();
         for (let i = 0; i < 5; i++) {
-            shuffle(elements);
-            this.results.push(elements.join(""));
+            const randomized = shuffle(elements);
+            this.results.push(randomized.join(""));
         }
     }
 }
-const POP_SPEZIAL_CHARS = ["!", ".", "@", "$", "_", "?", "-", "#", "(", ")"];
+const POP_SPEZIAL_CHARS = ["!", ".", "*", "@", "_", "?", "-"];
+
+export const LEET_MAP: Record<string, Array<string>> = {
+    o: ["0"],
+    a: ["4", "@"],
+    s: ["$"],
+    i: ["1"],
+    e: ["3"],
+    t: ["7"],
+};
+
+export function isLeetalble(c: string) {
+    c = c.toLowerCase();
+    return c in LEET_MAP || Object.values(LEET_MAP).some((v) => v.includes(c));
+}
+export function getLeetedChars(char: string) {
+    char = char.toLowerCase();
+
+    const leetChars = LEET_MAP[char];
+    if (leetChars) return leetChars;
+
+    return Object.entries(LEET_MAP).reduce((possibleReplacements, [k, v]) => {
+        if (v.includes(char)) possibleReplacements.push(k);
+        return possibleReplacements;
+    }, [] as Array<string>);
+}

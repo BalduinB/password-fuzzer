@@ -1,3 +1,3 @@
 export function shuffle<T>(arr: Array<T>) {
-    return arr.sort(() => Math.random() - 0.5);
+    return arr.toSorted(() => Math.random() - 0.5);
 }

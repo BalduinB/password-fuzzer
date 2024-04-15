@@ -9,6 +9,15 @@ export function expandNumberSequence(str: string, iterations = 3) {
 
     const maxNumber = Math.max(...numbersOfstr);
     const results = [];
+    if (iterations < 0) {
+        for (let i = 1; i <= Math.abs(iterations); i++) {
+            if (numbersOfstr.length <= 1) break;
+
+            numbersOfstr.pop();
+            results.push(numbersOfstr.join(""));
+        }
+        return results;
+    }
     let prev = str;
 
     for (let i = 1; i <= iterations; i++) {
@@ -61,5 +70,3 @@ export function upperFirst(str: string) {
 export function removeCharAt(str: string, index: number) {
     return str.slice(0, index) + str.slice(index + 1);
 }
-
-export const isValidLatinString = new RegExp(/^[\x00-\xFF\s]*$/g);

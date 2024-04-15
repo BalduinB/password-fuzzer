@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 
 import { Password } from "@/password";
-import { shuffle } from "@/lib/array";
 
 const testConfig = {
     password: "Password123%",
