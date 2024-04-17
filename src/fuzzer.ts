@@ -20,7 +20,7 @@ export class Fuzzer {
         return result;
     }
     fuzz() {
-        return this.methods.map(({ cls }) => cls.fuzz());
+        return this.methods.flatMap(({ cls }) => cls.fuzz());
     }
 }
 
