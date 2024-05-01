@@ -1,15 +1,15 @@
 import { MAX_LENGTH, MIN_LENGTH, getGroupMask } from "./lib/config";
-import {
-    calculateClass,
-    calculateElements,
-    calculateMask,
-} from "./lib/password";
+import { calculateClass, calculateElements, calculateMask } from "./lib/password";
 
 export class Password {
-    private mask?: string;
-    private class?: string;
-    private elements?: Array<string>;
-    constructor(public readonly password: string) {}
+    private mask: string;
+    private class: string;
+    private elements: Array<string>;
+    constructor(public readonly password: string) {
+        this.mask = calculateMask(password);
+        this.class = calculateClass(password);
+        this.elements = calculateElements(password);
+    }
 
     hasSpecialChar() {
         return this.getMask().includes(getGroupMask("symbols"));
@@ -43,21 +43,11 @@ export class Password {
         return !isNaN(+this.password) && Number.isInteger(+this.password);
     }
     getMask() {
-        let mask = this.mask;
-        if (!mask) {
-            mask = calculateMask(this.password);
-            this.mask = mask;
-        }
-        return mask;
+        return this.mask;
     }
 
     getClass() {
-        let pwClass = this.class;
-        if (!pwClass) {
-            pwClass = calculateClass(this.password);
-            this.class = pwClass;
-        }
-        return pwClass;
+        return this.class;
     }
     getGroupOfElement(element: string) {
         if (!this.password.includes(element)) {
@@ -69,11 +59,6 @@ export class Password {
         } else throw new Error(`Element '${element}' is not a group`);
     }
     getElements() {
-        let elements = this.elements;
-        if (!elements) {
-            elements = calculateElements(this.password);
-            this.elements = elements;
-        }
-        return [...elements];
+        return [...this.elements];
     }
 }
