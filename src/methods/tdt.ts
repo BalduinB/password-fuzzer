@@ -1,5 +1,5 @@
 import { getGroupMask } from "@/lib/config";
-import { calculateClass } from "@/lib/password";
+import { calculateClass, calculateElements, calculateElementsWithAlpha } from "@/lib/password";
 import {
     countUp,
     expandNumberSequence,
@@ -20,137 +20,110 @@ import { PasswordFuzzerMethod } from "@/types/fuzzer";
  * @link{https://core.ac.uk/download/pdf/225229085.pdf}
  */
 export class TDTMethod implements PasswordFuzzerMethod {
-    private results: Array<string> = [];
-    private fuzzedNumbers: Array<string> = [];
-    private fuzzedAlphas: Array<string> = [];
-    private fuzzedSpecials: Array<string> = [];
+    // private results: Array<string> = [];
+
     private readonly pw: Password;
+    private usePopularNumbers = false;
 
     constructor(pw: Password) {
         this.pw = pw;
-        this.results.push(pw.password);
     }
 
     fuzz() {
-        const alpaStrings = this.getAlphaElements();
-        const { numbers, spezials } = this.getRestElements();
+        const elements = this.pw.getElementsWithAlphaString();
+        const elementsWithOptions = elements.map((element) => {
+            const classOfElement = calculateClass(element);
+            if (classOfElement === "N") return this.fuzzNumber(element);
+            if (classOfElement.includes("U") || classOfElement.includes("L"))
+                return this.fuzzAlpha(element);
+            if (classOfElement === "S") return this.fuzzSpecial(element);
+            if (classOfElement === "X") return [element];
+            else return [element];
+        });
+        console.log(elementsWithOptions);
 
-        for (const alpha of alpaStrings) {
-            this.fuzzAlpha(alpha);
-        }
-
-        for (const number of numbers) {
-            this.fuzzNumber(number);
-        }
-        if (!numbers.length) this.fuzzedNumbers.push(...POPULAR_NUMBER_PARTS);
-
-        if (!spezials.length) spezials.push(...POPULAR_SINGLE_SPEZIAL_PARTS);
-        for (const spezial of spezials) {
-            this.fuzzSpecial(spezial);
-        }
-
-        this.createFuzzedPasswords();
-        return Array.from(new Set(this.results));
-    }
-
-    private getAlphaElements() {
-        return Array.from(this.pw.password.match(/[a-zA-Z]+/g) ?? []);
+        return this.createFuzzedPasswords(elementsWithOptions);
     }
 
     private getRestElements() {
-        let spezials = Array.from(
-            this.pw.password.match(/[^a-zA-Z0-9]+/g) ?? [],
-        );
+        const spezials = Array.from(this.pw.password.match(/[^a-zA-Z0-9]+/g) ?? []);
 
-        let numbers = Array.from(this.pw.password.match(/[0-9]+/g) ?? []);
+        const numbers = Array.from(this.pw.password.match(/[0-9]+/g) ?? []);
 
         return { spezials, numbers };
     }
-    private createFuzzedPasswords() {
-        this.results.push(...this.fuzzedAlphas);
+    private createFuzzedPasswords(fuzzedElements: Array<Array<string>>) {
+        const results: Array<string> = [];
 
-        // Upper case class so the Alpha Strings are represented as Uppercase
-        const upperPwClass = calculateClass(
-            this.pw.password.toUpperCase(),
-        ).split("");
-        const fuzzedClass = this.fuzzClass(upperPwClass);
+        results.push(...this.compinePassowords(fuzzedElements));
 
-        this.compinePassowords(fuzzedClass);
+        const fuzzedClassData = this.fuzzClass(fuzzedElements);
+        for (const fuzzedClass of fuzzedClassData) {
+            results.push(...this.compinePassowords(fuzzedClass));
+        }
+
+        return results;
     }
 
     private compinePassowords(pwClass: Array<Array<string>>) {
-        const replaced = pwClass.map((pwClass) =>
-            pwClass.map((classItem) => this.getStringToUse(classItem)),
-        );
-        for (const fuzzedPwClass of replaced) {
-            const res = fuzzedPwClass.reduce((acc, curr) => {
-                if (acc.length === 0) return curr;
-                return acc.flatMap((x) => curr.map((y) => x + y));
-            }, [] as Array<string>);
-            this.results.push(...res);
-        }
+        return pwClass.reduce((acc, curr) => {
+            if (acc.length === 0) return curr;
+            return acc.flatMap((x) => curr.map((y) => x + y));
+        }, [] as Array<string>);
     }
 
-    private fuzzClass(pwClass: Array<string>) {
+    private fuzzClass(fuzzedElements: Array<Array<string>>) {
         // Based on the Top 15 most common classes
-        const fuzzed = [pwClass];
-        if (this.pw.isAlphabeticOnly())
+        const fuzzed = [];
+        if (this.pw.isAlphabeticOnly()) {
+            this.usePopularNumbers = true;
             fuzzed.push(
-                [...pwClass, getGroupMask("numbers")],
-                [getGroupMask("numbers"), ...pwClass],
-                [...pwClass, getGroupMask("symbols")],
+                [...fuzzedElements, POPULAR_NUMBER_PARTS],
+                [POPULAR_NUMBER_PARTS, ...fuzzedElements],
+                [...fuzzedElements, POPULAR_SINGLE_SPEZIAL_PARTS],
             );
+        }
         return fuzzed;
     }
 
     private fuzzNumber(str: string) {
-        this.fuzzedNumbers.push(str);
+        const results = [str];
 
         // Based on the number string length (Table 5)
         if (isNumberSequence(str) && str.length < 4) {
-            const expanded = expandNumberSequence(
-                str,
-                Math.min(4, 4 - str.length),
-            );
-            this.fuzzedNumbers.push(...expanded);
+            const expanded = expandNumberSequence(str, Math.min(4, 4 - str.length));
+            results.push(...expanded);
 
             const removed: Array<string> = [];
             const chars = str.split("");
-            while (chars.length > 0) {
+            while (chars.length > 1) {
                 chars.pop();
                 removed.push(chars.join(""));
             }
-            this.fuzzedNumbers.push(...removed);
+            results.push(...removed);
         }
         const counted = countUp(str);
-        this.fuzzedNumbers.push(...counted);
+        results.push(...counted);
+        if (str === "7") console.log(results);
+        return Array.from(new Set(results));
     }
 
     private fuzzAlpha(str: string) {
-        this.fuzzedAlphas.push(str);
+        const results = [str];
         const lower = str.toLowerCase();
         const upper = str.toUpperCase();
 
-        this.fuzzedAlphas.push(lower);
-        this.fuzzedAlphas.push(upper);
+        results.push(lower);
+        results.push(upper);
 
-        this.fuzzedAlphas.push(onlyFirstCharUpper(str));
-        this.fuzzedAlphas.push(onlyLastCharUpper(str));
-        this.fuzzedAlphas = Array.from(new Set(this.fuzzedAlphas));
+        results.push(onlyFirstCharUpper(str));
+        results.push(onlyLastCharUpper(str));
+
+        return Array.from(new Set(results));
     }
 
     private fuzzSpecial(str: string) {
-        this.fuzzedSpecials.push(str);
-    }
-
-    private getStringToUse(classItem: string) {
-        return classItem === "N"
-            ? this.fuzzedNumbers
-            : classItem === "S"
-              ? this.fuzzedSpecials
-              : classItem === "U"
-                ? this.fuzzedAlphas
-                : raiseError("Class not found");
+        return [str, ...POPULAR_SINGLE_SPEZIAL_PARTS];
     }
 }
 
