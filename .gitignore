@@ -2,3 +2,5 @@ node_modules
 dist
 src/evaluation
 .env
+.DS_Store
+src/CompilationOfManyBreaches
