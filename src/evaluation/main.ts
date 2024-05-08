@@ -11,7 +11,7 @@ import {
 import { displayStatistics } from "./display";
 import { fuzzPassword } from "./generate-passwords";
 import { Statistic } from "./types";
-import { getRandomPairsFromFS } from "./sample-set";
+import { SAMPLE_SIZE, getRandomPairsFromFS } from "./sample-set";
 
 const DEFAULT_FUZZER_STATISTIC: Statistic = {
     generatedPasswords: 0,
@@ -19,7 +19,6 @@ const DEFAULT_FUZZER_STATISTIC: Statistic = {
     leakPercentage: 0,
 };
 
-let iterration = 0;
 const globalFuzzerStats: Record<string, Statistic> = {};
 const globalBaseStats = {
     totalPasswords: 0,
@@ -29,9 +28,11 @@ const globalBaseStats = {
 main();
 
 async function main() {
-    while (iterration < 1000) {
+    while (globalBaseStats.totalPasswords <= SAMPLE_SIZE) {
         console.time("getRandomPairsFromFS");
-        const randomDataSet = getRandomPairsFromFS();
+        const randomDataSet = await getRandomPairsFromFS(
+            SAMPLE_SIZE - globalBaseStats.totalPasswords,
+        );
         console.timeEnd("getRandomPairsFromFS");
 
         console.time("batchedGetLeakDataOG");
@@ -74,7 +75,6 @@ async function main() {
                 Object.entries(globalFuzzerStats).map(([method, stats]) => ({ method, ...stats })),
             );
         }
-        iterration++;
     }
 }
 export function calculateStatistics(

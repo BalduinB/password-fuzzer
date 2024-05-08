@@ -1,2 +1,5 @@
 import { z } from "zod";
-export const isEmail = z.string().email();
+export const isEmailSchema = z.string().email();
+export function isEmail(str: string) {
+    return isEmailSchema.safeParse(str).success;
+}

@@ -23,7 +23,7 @@ async function analyseFile(fileContent: string) {
             invalidLineFormat++;
             continue;
         }
-        if (!isEmail.safeParse(email).success) {
+        if (!isEmail(email)) {
             invalidEmails++;
         } else validEmails++;
     }
