@@ -30,16 +30,16 @@ main();
 async function main() {
     while (globalBaseStats.totalPasswords <= SAMPLE_SIZE) {
         console.time("getRandomPairsFromFS");
-        const randomDataSet = await getRandomPairsFromFS(
-            SAMPLE_SIZE - globalBaseStats.totalPasswords,
-        );
+        const randomDataSet = getRandomPairsFromFS(SAMPLE_SIZE - globalBaseStats.totalPasswords);
         console.timeEnd("getRandomPairsFromFS");
 
         console.time("batchedGetLeakDataOG");
         const dataWithLeakHit = await batchedGetLeakData(randomDataSet);
         console.timeEnd("batchedGetLeakDataOG");
+
         globalBaseStats.totalPasswords += randomDataSet.length;
         globalBaseStats.leakedPasswords += dataWithLeakHit.filter((p) => p.isLeaked).length;
+
         console.time("insertIntoAnalysedDataOG");
         const dataWithDbId = await insertIntoAnalysedDataReturningId(dataWithLeakHit, "base");
         console.time("insertIntoAnalysedDataOG");
