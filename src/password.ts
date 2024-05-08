@@ -1,14 +1,23 @@
-import { MAX_LENGTH, MIN_LENGTH, getGroupMask } from "./lib/config";
-import { calculateClass, calculateElements, calculateMask } from "./lib/password";
+import { getGroupMask } from "./lib/config";
+import {
+    calculateClass,
+    calculateElements,
+    calculateElementsWithAlpha,
+    calculateMask,
+    isTooLong,
+    isTooShort,
+} from "./lib/password";
 
 export class Password {
     private mask: string;
     private class: string;
     private elements: Array<string>;
+    private elementsWithAlphas: Array<string>;
     constructor(public readonly password: string) {
         this.mask = calculateMask(password);
         this.class = calculateClass(password);
         this.elements = calculateElements(password);
+        this.elementsWithAlphas = calculateElementsWithAlpha(password);
     }
 
     hasSpecialChar() {
@@ -27,11 +36,11 @@ export class Password {
         }
         return indexes;
     }
-    isTooShort() {
-        return this.password.length < MIN_LENGTH;
+    tooShort() {
+        return isTooShort(this.password);
     }
-    isTooLong() {
-        return this.password.length > MAX_LENGTH;
+    tooLong() {
+        return isTooLong(this.password);
     }
     isAlphabeticOnly() {
         return (
@@ -60,5 +69,8 @@ export class Password {
     }
     getElements() {
         return [...this.elements];
+    }
+    getElementsWithAlphaString() {
+        return [...this.elementsWithAlphas];
     }
 }

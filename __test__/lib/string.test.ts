@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { expandNumberSequence, isNumberSequence } from "@/lib/string";
+import { calculateElementsWithAlpha } from "@/lib/password";
 
 describe("lib/string", () => {
     test("isNumberSequence", () => {
@@ -11,5 +12,16 @@ describe("lib/string", () => {
         expect(expandNumberSequence("1", 2)).toEqual(["12", "123"]);
         expect(expandNumberSequence("123", -4)).toStrictEqual(["12", "1"]);
         expect(expandNumberSequence("1", -2)).toStrictEqual([]);
+    });
+    test("calculateElementsWithAlpha", () => {
+        expect(calculateElementsWithAlpha("-PassWort12")).toStrictEqual(["-", "PassWort", "12"]);
+        expect(calculateElementsWithAlpha("-Pass~Wort12")).toStrictEqual([
+            "-",
+            "Pass",
+            "~",
+            "Wort",
+            "12",
+        ]);
+        expect(calculateElementsWithAlpha("michiiii")).toStrictEqual(["michiiii"]);
     });
 });

@@ -1,9 +1,5 @@
 import type { Config } from "drizzle-kit";
-import * as dotenv from "dotenv";
-dotenv.config({
-    debug: true,
-    path: ".env",
-});
+import "dotenv/config";
 
 export default {
     schema: "./src/evaluation/db/schema.ts",

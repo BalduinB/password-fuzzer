@@ -1,11 +1,4 @@
-import {
-    uppercase,
-    lowercase,
-    numbers,
-    symbols,
-    CharGroup,
-    getGroupMask,
-} from "./config";
+import { numbers, symbols, CharGroup, getGroupMask, MAX_LENGTH, MIN_LENGTH } from "./config";
 
 export function isUpperCase(char: string) {
     return char.toUpperCase() === char && char.toLowerCase() !== char;
@@ -69,4 +62,30 @@ export function calculateElements(pw: string) {
     }, [] as Array<string>);
 
     return elements;
+}
+const alphaStringMasks: Array<string> = [getGroupMask("uppercase"), getGroupMask("lowercase")];
+
+export function calculateElementsWithAlpha(pw: string) {
+    const mask = calculateMask(pw);
+    const elements = mask.split("").reduce((acc, currMask, idx) => {
+        const prevMask = mask[idx - 1];
+        if (!prevMask) {
+            acc.push(pw[idx] ?? "");
+        } else if (
+            currMask === prevMask ||
+            (alphaStringMasks.includes(currMask) && alphaStringMasks.includes(prevMask))
+        ) {
+            acc[acc.length - 1] += pw[idx];
+        } else acc.push(pw[idx] ?? "");
+        return acc;
+    }, [] as Array<string>);
+
+    return elements;
+}
+
+export function isTooLong(pw: string) {
+    return pw.length > MAX_LENGTH;
+}
+export function isTooShort(pw: string) {
+    return pw.length < MIN_LENGTH;
 }

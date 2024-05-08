@@ -1,4 +1,4 @@
-import { fuzzKeyed } from "@/index";
+import { fuzz, fuzzKeyed } from "@/index";
 import { describe, expect, test } from "vitest";
 
 const testConfig = {
@@ -40,5 +40,8 @@ describe("fuzz abstraction", () => {
         for (const res of [testConfig.password, ...testConfig.fuzzed]) {
             expect(res).toContain(res);
         }
+    });
+    test("handle many passwort elements", () => {
+        fuzz("informatik12sich54-:erheit");
     });
 });

@@ -1,7 +1,7 @@
 export const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 export const lowercase = "abcdefghijklmnopqrstuvwxyz";
 export const numbers = "0123456789";
-export const symbols = "∼ `!@#$% ∧ &*()−+=[]{}|;’:',./<>?";
+export const symbols = "∼-`!@#$% ∧ &*()−+=\"[]{}|;’:',./<>?";
 
 const CHAR_GROUP_TO_MASK = {
     uppercase: "U",

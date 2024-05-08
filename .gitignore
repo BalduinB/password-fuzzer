@@ -1,6 +1,8 @@
 node_modules
 dist
-src/evaluation
+src/evaluation/playground
+src/evaluation/cli-client
 .env
 .DS_Store
+**/.DS_Store
 src/CompilationOfManyBreaches

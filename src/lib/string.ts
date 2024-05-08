@@ -21,7 +21,9 @@ export function expandNumberSequence(str: string, iterations = 3) {
     let prev = str;
 
     for (let i = 1; i <= iterations; i++) {
-        let newSequence = prev + (maxNumber + i);
+        const newNumber = maxNumber + i;
+        if (newNumber > 9) break;
+        const newSequence = prev + newNumber;
 
         results.push(newSequence);
         prev = newSequence;
@@ -29,12 +31,11 @@ export function expandNumberSequence(str: string, iterations = 3) {
     return results;
 }
 
-export function countUp(str: string, iterations = 3) {
+export function countUp(str: string, iterations = 2) {
     const number = +str;
     const results: Array<string> = [];
     for (let i = 1; i <= iterations; i++) {
         results.push((number + i).toString());
-        if (number - i > 0) results.push((number - i).toString());
     }
     return results;
 }
@@ -54,10 +55,7 @@ export function onlyFirstCharUpper(str: string) {
     return first.toUpperCase() + restStr.toLowerCase();
 }
 export function onlyLastCharUpper(str: string) {
-    return onlyFirstCharUpper(str.split("").reverse().join(""))
-        .split("")
-        .reverse()
-        .join("");
+    return onlyFirstCharUpper(str.split("").reverse().join("")).split("").reverse().join("");
 }
 
 export function upperFirst(str: string) {
