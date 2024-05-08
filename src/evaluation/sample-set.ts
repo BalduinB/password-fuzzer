@@ -1,4 +1,3 @@
-import { title } from "process";
 import { basePathOfBreachData, getLineCountOfFile, parseOutLines, walkWhile } from "./fs";
 import { fNumber } from "./helpers/formaters";
 
@@ -37,13 +36,12 @@ function findLines(lineIndexes: Array<number>) {
 
             const foundLines = parseOutLines(content, linesIndexesInFile);
             for (const { email, password } of foundLines) {
-                //TODO: dashier zieht übertriegen viel Memory, aber nur wenn die echten Daten genommen werden.
-                const newEmail = email;
-                const newPassword = password;
-                console.log("FOUND", newEmail, newPassword);
+                // deep copy event though it's not necessary, weird memory usage if not done
+                const newEmail = JSON.parse(JSON.stringify(email));
+                const newPassword = JSON.parse(JSON.stringify(password));
                 results.push({
-                    email: `eineSehrLangeEmailAdresse${Math.random() * 200}@gmx.com`,
-                    password: `adkjfsdkfjskdajfksdlfsa${Math.random() * 200}djfsalkdfjaslkdfjsdklfjslk`,
+                    email: newEmail,
+                    password: newPassword,
                 });
             }
             passedLines += lineCount;
