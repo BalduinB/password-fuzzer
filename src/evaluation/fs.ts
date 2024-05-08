@@ -7,42 +7,43 @@ export const lineDelimiter = "\r\n";
 
 export function parseOutLines(content: string, lineIndexes: Array<number>) {
     const results: Array<{ email: string; password: string }> = [];
-    const delimiterOffset = lineDelimiter.length;
-    let pos = 0;
-    let currentLineIndex = 0;
+
     if (lineIndexes.length === 0) return results;
-    // NOTE: not shure what is faster.
-    // const lines = getLinesOfFile(content);
-    // for (const lineIndex of lineIndexes) {
-    //     const [email, password] = getLineContent(lines, lineIndex);
-    //     if (!email || !password || !isEmail(email)) {
-    //         continue;
-    //     }
-    //     results.push({ email, password });
-    // }
-    const maxLineNumber = lineIndexes.reduce((max, curr) => (curr > max ? curr : max), 0);
-    while (pos > -1 && currentLineIndex < maxLineNumber) {
-        if (lineIndexes.includes(currentLineIndex)) {
-            let lineEnd = content.indexOf(lineDelimiter, pos + delimiterOffset);
-            if (lineEnd === -1) {
-                lineEnd = content.length;
-            }
-            const lineStart = pos === 0 ? 0 : pos + delimiterOffset;
-
-            const line = content.slice(lineStart, lineEnd);
-            const [email, password] = parseLine(line);
-            if (!email || !password || !isEmail(email)) {
-                pos = content.indexOf(lineDelimiter, currentLineIndex);
-                currentLineIndex++;
-                continue;
-            }
-            // console.log("FOUND", lineIndex, lineIndexInFile, email);
-            results.push({ email, password });
+    const lines = getLinesOfFile(content);
+    for (const lineIndex of lineIndexes) {
+        const [email, password] = getLineContent(lines, lineIndex);
+        if (!email || !password || !isEmail(email)) {
+            continue;
         }
-
-        pos = content.indexOf(lineDelimiter, currentLineIndex);
-        currentLineIndex++;
+        results.push({ email, password });
     }
+    // NOTE: not shure what is faster.
+    //  const delimiterOffset = lineDelimiter.length;
+    //  let pos = 0;
+    //  let currentLineIndex = 0;
+    // const maxLineNumber = lineIndexes.reduce((max, curr) => (curr > max ? curr : max), 0);
+    // while (pos > -1 && currentLineIndex < maxLineNumber) {
+    //     if (lineIndexes.includes(currentLineIndex)) {
+    //         let lineEnd = content.indexOf(lineDelimiter, pos + delimiterOffset);
+    //         if (lineEnd === -1) {
+    //             lineEnd = content.length;
+    //         }
+    //         const lineStart = pos === 0 ? 0 : pos + delimiterOffset;
+
+    //         const line = content.slice(lineStart, lineEnd);
+    //         const [email, password] = parseLine(line);
+    //         if (!email || !password || !isEmail(email)) {
+    //             pos = content.indexOf(lineDelimiter, currentLineIndex);
+    //             currentLineIndex++;
+    //             continue;
+    //         }
+    //         // console.log("FOUND", lineIndex, lineIndexInFile, email);
+    //         results.push({ email, password });
+    //     }
+
+    //     pos = content.indexOf(lineDelimiter, currentLineIndex);
+    //     currentLineIndex++;
+    // }
 
     return results;
 }
