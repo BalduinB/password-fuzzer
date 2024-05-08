@@ -1,6 +1,6 @@
 import { PasswordFuzzerMethod } from "./types/fuzzer";
 
-type Method = { cls: PasswordFuzzerMethod; key: string };
+type Method = { fuzzerMethod: PasswordFuzzerMethod; key: string };
 export class Fuzzer {
     private methods: Array<Method> = [];
     register(method: Method | PasswordFuzzerMethod) {
@@ -8,19 +8,19 @@ export class Fuzzer {
             this.methods.push(method);
             return this;
         }
-        this.methods.push({ cls: method, key: "unknown" });
+        this.methods.push({ fuzzerMethod: method, key: "unknown" });
 
         return this;
     }
     fuzzKeyed() {
-        const result = this.methods.map(({ cls, key }) => ({
+        const result = this.methods.map(({ fuzzerMethod, key }) => ({
             key,
-            generated: cls.fuzz(),
+            generated: fuzzerMethod.fuzz(),
         }));
         return result;
     }
     fuzz() {
-        return this.methods.flatMap(({ cls }) => cls.fuzz());
+        return this.methods.flatMap(({ fuzzerMethod }) => fuzzerMethod.fuzz());
     }
 }
 
