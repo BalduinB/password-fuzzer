@@ -10,8 +10,17 @@ export function parseOutLines(content: string, lineIndexes: Array<number>) {
     const delimiterOffset = lineDelimiter.length;
     let pos = 0;
     let currentLineIndex = 0;
-    const maxLineNumber = lineIndexes.reduce((max, curr) => (curr > max ? curr : max), 0);
     if (lineIndexes.length === 0) return results;
+    // NOTE: not shure what is faster.
+    // const lines = getLinesOfFile(content);
+    // for (const lineIndex of lineIndexes) {
+    //     const [email, password] = getLineContent(lines, lineIndex);
+    //     if (!email || !password || !isEmail(email)) {
+    //         continue;
+    //     }
+    //     results.push({ email, password });
+    // }
+    const maxLineNumber = lineIndexes.reduce((max, curr) => (curr > max ? curr : max), 0);
     while (pos > -1 && currentLineIndex < maxLineNumber) {
         if (lineIndexes.includes(currentLineIndex)) {
             let lineEnd = content.indexOf(lineDelimiter, pos + delimiterOffset);

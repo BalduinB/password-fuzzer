@@ -52,7 +52,7 @@ function findLines(lineIndexes: Array<number>) {
                         title: "WALKING",
                         passedLines: fNumber(passedLines),
                         maxLineNumber: fNumber(maxLineNumber),
-                        linesIndexesInFile: fNumber(linesIndexesInFile.length),
+                        lotalLinesToFind: fNumber(lineIndexes.length),
                         results: fNumber(results.length),
                         file: `${filesPassed}/4_800`,
                     },
@@ -66,7 +66,7 @@ function findLines(lineIndexes: Array<number>) {
     return results;
 }
 
-const MAX_LINE_IDS = 1_000;
+const MAX_LINE_IDS = 5_000;
 function getRandomIds(amount: number) {
     return Array.from(
         new Set(
