@@ -1,4 +1,4 @@
-import { fuzz, fuzzKeyed } from "@/index";
+import { fuzz } from "@/index";
 import { describe, expect, test } from "vitest";
 
 const testConfig = {
@@ -28,7 +28,7 @@ const testConfig = {
 };
 
 describe("fuzz abstraction", () => {
-    const res = fuzzKeyed(testConfig.password);
+    const res = fuzz(testConfig.password);
     test("defined", () => {
         expect(res).toBeDefined();
     });
@@ -37,8 +37,8 @@ describe("fuzz abstraction", () => {
         expect(res.length).toBeGreaterThan(1);
     });
     test("contains", () => {
-        for (const res of [testConfig.password, ...testConfig.fuzzed]) {
-            expect(res).toContain(res);
+        for (const results of testConfig.fuzzed) {
+            expect(res).toContain(results);
         }
     });
     test("handle many passwort elements", () => {
