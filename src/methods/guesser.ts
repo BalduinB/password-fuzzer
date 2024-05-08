@@ -51,7 +51,7 @@ export class GuesserMethod implements PasswordFuzzerMethod {
     }
 
     private delete() {
-        if (this.pw.isTooShort()) return;
+        if (this.pw.tooShort()) return;
 
         const allElements = this.pw.getElements();
 
@@ -69,7 +69,7 @@ export class GuesserMethod implements PasswordFuzzerMethod {
     }
 
     private insert() {
-        if (this.pw.isTooLong()) return;
+        if (this.pw.tooLong()) return;
 
         if (!this.pw.hasSpecialChar()) {
             for (const char of POP_SPEZIAL_CHARS) {
@@ -115,7 +115,7 @@ export class GuesserMethod implements PasswordFuzzerMethod {
             const idxsOfChar = this.pw.indexesOf(char);
             for (const index of idxsOfChar) {
                 for (const leetChar of leet) {
-                    let newPw =
+                    const newPw =
                         this.pw.password.slice(0, index) +
                         leetChar +
                         this.pw.password.slice(index + 1);

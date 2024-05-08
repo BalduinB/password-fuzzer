@@ -1,5 +1,4 @@
-import { getGroupMask } from "@/lib/config";
-import { calculateClass, calculateElements, calculateElementsWithAlpha } from "@/lib/password";
+import { calculateClass, isTooLong } from "@/lib/password";
 import {
     countUp,
     expandNumberSequence,
@@ -23,7 +22,6 @@ export class TDTMethod implements PasswordFuzzerMethod {
     // private results: Array<string> = [];
 
     private readonly pw: Password;
-    private usePopularNumbers = false;
 
     constructor(pw: Password) {
         this.pw = pw;
@@ -40,35 +38,34 @@ export class TDTMethod implements PasswordFuzzerMethod {
             if (classOfElement === "X") return [element];
             else return [element];
         });
-        console.log(elementsWithOptions);
 
         return this.createFuzzedPasswords(elementsWithOptions);
     }
 
-    private getRestElements() {
-        const spezials = Array.from(this.pw.password.match(/[^a-zA-Z0-9]+/g) ?? []);
-
-        const numbers = Array.from(this.pw.password.match(/[0-9]+/g) ?? []);
-
-        return { spezials, numbers };
-    }
     private createFuzzedPasswords(fuzzedElements: Array<Array<string>>) {
         const results: Array<string> = [];
 
         results.push(...this.compinePassowords(fuzzedElements));
-
         const fuzzedClassData = this.fuzzClass(fuzzedElements);
         for (const fuzzedClass of fuzzedClassData) {
+            if (results.length > 1000) break;
             results.push(...this.compinePassowords(fuzzedClass));
         }
 
-        return results;
+        return Array.from(new Set(results));
     }
 
     private compinePassowords(pwClass: Array<Array<string>>) {
         return pwClass.reduce((acc, curr) => {
+            if (acc.length > 1000) {
+                console.log("Max Passwords reached", acc.length);
+                return acc;
+            }
             if (acc.length === 0) return curr;
-            return acc.flatMap((x) => curr.map((y) => x + y));
+            return acc
+                .flatMap((x) => curr.map((y) => x + y))
+                .filter((v) => !isTooLong(v))
+                .slice(0, 1000);
         }, [] as Array<string>);
     }
 
@@ -76,7 +73,6 @@ export class TDTMethod implements PasswordFuzzerMethod {
         // Based on the Top 15 most common classes
         const fuzzed = [];
         if (this.pw.isAlphabeticOnly()) {
-            this.usePopularNumbers = true;
             fuzzed.push(
                 [...fuzzedElements, POPULAR_NUMBER_PARTS],
                 [POPULAR_NUMBER_PARTS, ...fuzzedElements],
@@ -104,7 +100,7 @@ export class TDTMethod implements PasswordFuzzerMethod {
         }
         const counted = countUp(str);
         results.push(...counted);
-        if (str === "7") console.log(results);
+
         return Array.from(new Set(results));
     }
 
@@ -130,7 +126,3 @@ export class TDTMethod implements PasswordFuzzerMethod {
 const POPULAR_NUMBER_PARTS = ["1", "12", "13", "11", "22", "23", "07"];
 // Based on the most common special characters (Table 8)
 const POPULAR_SINGLE_SPEZIAL_PARTS = ["!", ".", "*", "@"];
-
-function raiseError(message: string): never {
-    throw new Error(message);
-}
