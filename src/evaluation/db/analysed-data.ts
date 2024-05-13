@@ -1,33 +1,31 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { batchedGetLeakData } from "../c3";
 import { db } from "./client";
-import { analysedData } from "./schema";
+import { analysedData, analysedDataTest } from "./schema";
 
-export const CURRENT_VERSION = "BASE";
-export async function insertIntoAnalysedDataReturningId(
+export const CURRENT_VERSION = "BASE2";
+export async function insertBaseDataIntoAnalysedData(
     data: Awaited<ReturnType<typeof batchedGetLeakData> & { originalVersionId?: number }>,
     pwType: string,
 ) {
-    const res = await Promise.all(
-        data.map(async (data) => {
-            const [resultHeader] = await db
-                .insert(analysedData)
-                .values({
-                    email: data.email,
-                    pw: data.password,
-                    pwType,
-                    version: CURRENT_VERSION,
-                    hits: data.isLeaked ? 1 : 0,
-                    originalVersionId: 0,
-                })
-                .onDuplicateKeyUpdate({
-                    set: { hits: sql`hit + ${data.isLeaked ? 1 : 0}` },
-                });
-            return { ...data, databaseId: resultHeader.insertId };
-        }),
+    await db.insert(analysedData).values(
+        data.map((data) => ({
+            email: data.email,
+            pw: data.password,
+            pwType,
+            version: CURRENT_VERSION,
+            hit: data.isLeaked,
+        })),
     );
-
-    return res;
+    return await db
+        .select({
+            email: analysedData.email,
+            password: analysedData.pw,
+            isLeaked: analysedData.hit,
+            databaseId: analysedData.id,
+        })
+        .from(analysedData)
+        .where(and(eq(analysedData.pwType, pwType), eq(analysedData.version, CURRENT_VERSION)));
 }
 
 export async function alreadyExists(email: string, password: string) {
@@ -46,23 +44,16 @@ export async function insertIntoAnalysedData(
     pwType: string,
     originalVersionId?: number,
 ) {
-    console.time("insertIntoAnalysedData");
     await Promise.all(
         data.map(async (data) => {
-            await db
-                .insert(analysedData)
-                .values({
-                    email: data.email,
-                    pw: data.password,
-                    pwType,
-                    version: CURRENT_VERSION,
-                    hits: data.isLeaked ? 1 : 0,
-                    originalVersionId,
-                })
-                .onDuplicateKeyUpdate({
-                    set: { hits: sql`hit + ${data.isLeaked ? 1 : 0}` },
-                });
+            await db.insert(analysedData).values({
+                email: data.email,
+                pw: data.password,
+                pwType,
+                version: CURRENT_VERSION,
+                hit: data.isLeaked,
+                originalVersionId,
+            });
         }),
     );
-    console.timeEnd("insertIntoAnalysedData");
 }

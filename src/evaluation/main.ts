@@ -6,7 +6,7 @@ import {
 } from "./c3";
 import {
     insertIntoAnalysedData,
-    insertIntoAnalysedDataReturningId as insertIntoAnalysedDataReturningId,
+    insertBaseDataIntoAnalysedData as insertBaseDataIntoAnalysedData,
 } from "./db/analysed-data";
 import { displayFuzzerStatistics } from "./display";
 import { fuzzPassword } from "./generate-passwords";
@@ -49,7 +49,7 @@ async function main() {
             logGlobalStats();
 
             console.time("insertIntoAnalysedDataBase");
-            const dataWithDbId = await insertIntoAnalysedDataReturningId(dataWithLeakHit, "base");
+            const dataWithDbId = await insertBaseDataIntoAnalysedData(dataWithLeakHit, "base");
             console.timeEnd("insertIntoAnalysedDataBase");
             let i = 0;
             for (const { email, password, databaseId: originalVersionId } of dataWithDbId) {
