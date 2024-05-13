@@ -1,18 +1,17 @@
-import { sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { batchedGetLeakData } from "../c3";
 import { db } from "./client";
-import { analysedData, analysedDataTest } from "./schema";
+import { analysedData } from "./schema";
 
 export const CURRENT_VERSION = "BASE";
-export async function insertIntoAnalycedDataReturningId(
+export async function insertIntoAnalysedDataReturningId(
     data: Awaited<ReturnType<typeof batchedGetLeakData> & { originalVersionId?: number }>,
     pwType: string,
 ) {
-    console.time("insertIntoAnalycedDataReturningId");
     const res = await Promise.all(
         data.map(async (data) => {
             const [resultHeader] = await db
-                .insert(analysedDataTest)
+                .insert(analysedData)
                 .values({
                     email: data.email,
                     pw: data.password,
@@ -27,8 +26,20 @@ export async function insertIntoAnalycedDataReturningId(
             return { ...data, databaseId: resultHeader.insertId };
         }),
     );
-    console.timeEnd("insertIntoAnalycedDataReturningId");
+
     return res;
+}
+
+export async function alreadyExists(email: string, password: string) {
+    const res = await db.query.analysedData.findFirst({
+        where: and(
+            eq(analysedData.email, email),
+            eq(analysedData.pw, password),
+            eq(analysedData.pwType, "base"),
+            eq(analysedData.version, CURRENT_VERSION),
+        ),
+    });
+    return !res;
 }
 export async function insertIntoAnalysedData(
     data: Awaited<ReturnType<typeof batchedGetLeakData>>,
@@ -39,7 +50,7 @@ export async function insertIntoAnalysedData(
     await Promise.all(
         data.map(async (data) => {
             await db
-                .insert(analysedDataTest)
+                .insert(analysedData)
                 .values({
                     email: data.email,
                     pw: data.password,

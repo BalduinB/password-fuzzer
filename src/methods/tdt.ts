@@ -1,3 +1,4 @@
+import { tooManyGenerations } from "@/evaluation/main";
 import { calculateClass, isTooLong } from "@/lib/password";
 import {
     countUp,
@@ -48,7 +49,10 @@ export class TDTMethod implements PasswordFuzzerMethod {
         results.push(...this.compinePassowords(fuzzedElements));
         const fuzzedClassData = this.fuzzClass(fuzzedElements);
         for (const fuzzedClass of fuzzedClassData) {
-            if (results.length > 1000) break;
+            if (results.length > 1000) {
+                tooManyGenerations.tdt++;
+                break;
+            }
             results.push(...this.compinePassowords(fuzzedClass));
         }
 
@@ -62,10 +66,13 @@ export class TDTMethod implements PasswordFuzzerMethod {
                 return acc;
             }
             if (acc.length === 0) return curr;
-            return acc
-                .flatMap((x) => curr.map((y) => x + y))
-                .filter((v) => !isTooLong(v))
-                .slice(0, 1000);
+
+            const resultets = acc.flatMap((x) => curr.map((y) => x + y));
+            if (resultets.length > 1000) {
+                tooManyGenerations.tdt++;
+                return resultets.slice(0, 1000);
+            }
+            return resultets;
         }, [] as Array<string>);
     }
 

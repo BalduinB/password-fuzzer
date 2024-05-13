@@ -1,4 +1,4 @@
-import { getGroupMask } from "@/lib/config";
+import { tooManyGenerations } from "@/evaluation/main";
 import { fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
 import { calculateClass, isTooLong } from "@/lib/password";
 import {
@@ -48,7 +48,10 @@ export class OurMethod implements PasswordFuzzerMethod {
         results.push(...this.compinePassowords(fuzzedElements));
         const fuzzedClassData = this.fuzzClass(fuzzedElements);
         for (const fuzzedClass of fuzzedClassData) {
-            if (results.length > 1000) break;
+            if (results.length > 1000) {
+                tooManyGenerations.our++;
+                break;
+            }
             results.push(...this.compinePassowords(fuzzedClass));
         }
         // Keyboard Squenzes
@@ -73,14 +76,17 @@ export class OurMethod implements PasswordFuzzerMethod {
     private compinePassowords(pwClass: Array<Array<string>>) {
         return pwClass.reduce((acc, curr) => {
             if (acc.length > 1000) {
+                tooManyGenerations.our++;
                 console.log("Max Passwords reached", acc.length);
                 return acc;
             }
             if (acc.length === 0) return curr;
-            return acc
-                .flatMap((x) => curr.map((y) => x + y))
-                .filter((v) => !isTooLong(v))
-                .slice(0, 1000);
+            const resultets = acc.flatMap((x) => curr.map((y) => x + y));
+            if (resultets.length > 1000) {
+                tooManyGenerations.our++;
+                return resultets.slice(0, 1000);
+            }
+            return resultets;
         }, [] as Array<string>);
     }
 

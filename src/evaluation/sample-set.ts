@@ -1,26 +1,45 @@
+import { db } from "./db/client";
 import { basePathOfBreachData, getLineCountOfFile, parseOutLines, walkWhile } from "./fs";
+import { eq } from "drizzle-orm";
 import { fNumber } from "./helpers/formaters";
+import { analysedDataTest } from "./db/schema";
+import { alreadyExists } from "./db/analysed-data";
 
-const NUMBER_OF_ENTRIES = 2_540_774_106;
-export const SAMPLE_SIZE = 50_000;
+const NUMBER_OF_ENTRIES = 3_279_064_311;
+export const SAMPLE_SIZE = 40_000;
 
-export function getRandomPairsFromFS(amount: number) {
+export async function getRandomPairsFromFS(amount: number) {
     const randomIds = getRandomIds(amount);
-    return findLines(randomIds);
+    const lines = await findLines(randomIds);
+    return await filterAlreadyInSampleSet(lines);
+}
+
+export async function filterAlreadyInSampleSet(lines: Array<{ email: string; password: string }>) {
+    const results = [];
+    const batchSize = 250;
+    for (let i = 0; i < lines.length; i += batchSize) {
+        const batch = lines.slice(i, i + batchSize);
+        const shouldInclude = await Promise.all(
+            batch.map(async ({ email, password }) => !(await alreadyExists(email, password))),
+        );
+        results.push(...batch.filter((_, i) => !shouldInclude[i]));
+    }
+
+    return results;
 }
 /**
  *
  * @param lineIndexes zero based indexes of lines to find
  * @returns Array of { email, password }
  */
-function findLines(lineIndexes: Array<number>) {
+async function findLines(lineIndexes: Array<number>) {
     const linesToFind = lineIndexes.toSorted();
     let passedLines = 0;
     let filesPassed = 0;
     let skippedLines = 0;
     const results: Array<{ email: string; password: string }> = [];
     const maxLineNumber = lineIndexes.reduce((max, curr) => (curr > max ? curr : max), 0);
-    walkWhile(
+    await walkWhile(
         basePathOfBreachData,
         () => linesToFind.length > results.length + skippedLines && passedLines < maxLineNumber,
         (content) => {
@@ -76,4 +95,15 @@ function getRandomIds(amount: number) {
             ),
         ),
     );
+}
+
+export async function getDummyFromDB() {
+    return await db
+        .select({
+            password: analysedDataTest.pw,
+            email: analysedDataTest.email,
+        })
+        .from(analysedDataTest)
+        .where(eq(analysedDataTest.pwType, "base"))
+        .limit(SAMPLE_SIZE);
 }

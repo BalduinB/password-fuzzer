@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { index, mysqlTable, serial, varchar, unique, int } from "drizzle-orm/mysql-core";
+import { index, mysqlTable, serial, varchar, int } from "drizzle-orm/mysql-core";
 
 export const analysedData = mysqlTable(
     "analysed_data",
@@ -17,7 +17,6 @@ export const analysedData = mysqlTable(
         hitIdx: index("hit_idx").on(table.hits),
         pwTypeIdx: index("pw_type_idx").on(table.pwType),
         versionIdx: index("version_idx").on(table.version),
-        emailPwTypeUnique: unique("email_pw_type_unique").on(table.email, table.pw, table.pwType),
     }),
 );
 export const analysedDataTest = mysqlTable(
@@ -36,14 +35,14 @@ export const analysedDataTest = mysqlTable(
         hitIdx: index("hit_idx").on(table.hits),
         pwTypeIdx: index("pw_type_idx").on(table.pwType),
         versionIdx: index("version_idx").on(table.version),
-        emailPwTypeUnique: unique("email_pw_type_unique").on(table.email, table.pw, table.pwType),
     }),
 );
 
 export const analysedDataRelations = relations(analysedData, ({ many, one }) => ({
-    fuzzedPasswords: many(analysedData),
+    fuzzedPasswords: many(analysedData, { relationName: "originalVersion" }),
     originalVersion: one(analysedData, {
         fields: [analysedData.originalVersionId],
         references: [analysedData.id],
+        relationName: "originalVersion",
     }),
 }));
