@@ -1,10 +1,11 @@
-import type { Config } from "drizzle-kit";
+import { defineConfig } from "drizzle-kit";
 import "dotenv/config";
 
-export default {
+export default defineConfig({
     schema: "./src/evaluation/db/schema.ts",
     out: "./drizzle",
     driver: "mysql2",
+    dialect: "mysql",
     dbCredentials: {
         user: process.env.DB_USER!,
         database: process.env.DB_NAME!,
@@ -12,4 +13,4 @@ export default {
         password: process.env.DB_PASSWORD!,
         port: +process.env.DB_PORT!,
     },
-} satisfies Config;
+});

@@ -1,4 +1,4 @@
-import { QWERTZ_KEYBOARD } from "./config";
+import { QWERTY_KEYBOARD } from "./config";
 type DirOffsets = 0 | 1 | -1;
 export function keyboardSequenzDirection(str: string) {
     const keyboardIndexes = keyboardIndexesFromStr(str);
@@ -47,12 +47,8 @@ export function keyboardSequenzDirection(str: string) {
     return invalid ? null : direction;
 }
 
-export function fuzzKeyboardSquenz(
-    str: string,
-    keyboad = QWERTZ_KEYBOARD,
-    offset = 2,
-) {
-    const keyboardIndexes = keyboardIndexesFromStr(str);
+export function fuzzKeyboardSquenz(str: string, keyboad = QWERTY_KEYBOARD, offset = 2) {
+    const keyboardIndexes = keyboardIndexesFromStr(str, keyboad);
     const dirOfSequenz = keyboardSequenzDirection(str);
     if (!dirOfSequenz) return [];
 
@@ -93,13 +89,13 @@ export function fuzzKeyboardSquenz(
     return Array.from(new Set(results));
 }
 
-function keyboardIndexesFromStr(str: string) {
+function keyboardIndexesFromStr(str: string, keyboad = QWERTY_KEYBOARD) {
     return str
         .toLowerCase()
         .split("")
         .map((char) => {
-            const rowI = QWERTZ_KEYBOARD.findIndex((row) => row.includes(char));
-            const colI = QWERTZ_KEYBOARD[rowI]?.indexOf(char);
+            const rowI = keyboad.findIndex((row) => row.includes(char));
+            const colI = keyboad[rowI]?.indexOf(char);
             if (rowI === -1 || colI === undefined || colI === -1) return null;
             return { rowI, colI };
         });

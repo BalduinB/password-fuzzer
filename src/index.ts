@@ -1,5 +1,5 @@
 import { Fuzzer } from "./fuzzer";
-import { OurMethod } from "./methods/created";
+import { OurMethod } from "./methods/our";
 import { GuesserMethod } from "./methods/guesser";
 import { TDTMethod } from "./methods/tdt";
 import { Password } from "./password";

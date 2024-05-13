@@ -8,7 +8,7 @@
         "test": "vitest",
         "db:studio": "pnpm drizzle-kit studio",
         "db:generate": "drizzle-kit generate:mysql",
-        "db:push": "drizzle-kit push:mysql"
+        "db:push": "drizzle-kit push"
     },
     "main": "dist/index.js",
     "module": "dist/index.mjs",
@@ -19,7 +19,7 @@
         "@typescript-eslint/eslint-plugin": "^7.0.2",
         "@typescript-eslint/parser": "^7.0.2",
         "dotenv": "^16.4.5",
-        "drizzle-kit": "^0.20.17",
+        "drizzle-kit": "^0.21.1",
         "drizzle-orm": "^0.30.2",
         "eslint": "^8.57.0",
         "eslint-config-prettier": "^9.1.0",
