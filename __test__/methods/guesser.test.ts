@@ -4,9 +4,9 @@ import { Password } from "@/password";
 import { GuesserMethod } from "@/methods/guesser";
 
 const testConfig = {
-    password: "password",
+    password: "password123",
     fuzzed: [
-        "password1",
+        "password12",
         "1password",
         "PASSWORD",
         "Password",

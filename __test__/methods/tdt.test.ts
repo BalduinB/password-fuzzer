@@ -35,4 +35,28 @@ describe("TDT Model", () => {
             expect(result).toContain(res);
         }
     });
+    test("Compine", () => {
+        let result = fuzzer["compinePassowords"]([]);
+        expect(result).toStrictEqual([]);
+        result = fuzzer["compinePassowords"]([
+            ["a", "b"],
+            ["c", "d"],
+        ]);
+        expect(result).toStrictEqual(["ac", "ad", "bc", "bd"]);
+        result = fuzzer["compinePassowords"]([
+            ["1", "2"],
+            ["pass", "Pass"],
+            ["$", "-"],
+        ]);
+        expect(result).toStrictEqual([
+            "1pass$",
+            "1pass-",
+            "1Pass$",
+            "1Pass-",
+            "2pass$",
+            "2pass-",
+            "2Pass$",
+            "2Pass-",
+        ]);
+    });
 });

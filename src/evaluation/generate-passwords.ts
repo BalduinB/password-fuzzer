@@ -7,7 +7,7 @@ export function fuzzPassword(pw: string) {
     const generatedPasswords = fuzzer
         .register({ fuzzerMethod: new TDTMethod(password), key: "tdt" })
         .register({ fuzzerMethod: new GuesserMethod(password), key: "guesser" })
-        .register({ fuzzerMethod: new OurMethod(password), key: "our" })
+        // .register({ fuzzerMethod: new OurMethod(password), key: "our" })
         .fuzzKeyed();
     return generatedPasswords.map(({ key, generated }) => ({
         method: key,
