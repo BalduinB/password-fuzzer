@@ -20,6 +20,7 @@ export function getGroupMask(group: CharGroup) {
 
 export const MIN_LENGTH = 6;
 export const MAX_LENGTH = 11;
+export const MAX_PASWORDS_PER_METHOD = 100;
 
 export const QWERTZ_KEYBOARD = [
     "1234567890ß´".split(""),

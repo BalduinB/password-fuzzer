@@ -1,6 +1,7 @@
-import { tooManyGenerations } from "@/evaluation/main";
+import { tooManyGenerations } from "@/evaluation/stats";
+import { MAX_PASWORDS_PER_METHOD } from "@/lib/config";
 import { fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
-import { calculateClass, isTooLong } from "@/lib/password";
+import { calculateClass } from "@/lib/password";
 import {
     countUp,
     expandNumberSequence,
@@ -48,7 +49,7 @@ export class OurMethod implements PasswordFuzzerMethod {
         results.push(...this.compinePassowords(fuzzedElements));
         const fuzzedClassData = this.fuzzClass(fuzzedElements);
         for (const fuzzedClass of fuzzedClassData) {
-            if (results.length > 1000) {
+            if (results.length > MAX_PASWORDS_PER_METHOD) {
                 tooManyGenerations.our++;
                 break;
             }
@@ -75,16 +76,16 @@ export class OurMethod implements PasswordFuzzerMethod {
     }
     private compinePassowords(pwClass: Array<Array<string>>) {
         return pwClass.reduce((acc, curr) => {
-            if (acc.length > 1000) {
+            if (acc.length > MAX_PASWORDS_PER_METHOD) {
                 tooManyGenerations.our++;
                 console.log("Max Passwords reached", acc.length);
                 return acc;
             }
             if (acc.length === 0) return curr;
             const resultets = acc.flatMap((x) => curr.map((y) => x + y));
-            if (resultets.length > 1000) {
+            if (resultets.length > MAX_PASWORDS_PER_METHOD) {
                 tooManyGenerations.our++;
-                return resultets.slice(0, 1000);
+                return resultets.slice(0, MAX_PASWORDS_PER_METHOD);
             }
             return resultets;
         }, [] as Array<string>);

@@ -1,5 +1,5 @@
 import { shuffle } from "@/lib/array";
-import { fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
+import { findKeyboardSequenzes, fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
 import { isNumberStr, isSymbolStr, isUpperCase } from "@/lib/password";
 import { removeCharAt } from "@/lib/string";
 import { Password } from "@/password";
@@ -46,8 +46,26 @@ export class GuesserMethod implements PasswordFuzzerMethod {
         for (const element of elements) {
             if (element.length <= 1) continue;
             const results = fuzzKeyboardSquenz(element);
-            this.results.push(...results);
+            const idx = this.pw.password.indexOf(element);
+            for (const res of results) {
+                this.results.push(
+                    this.pw.password.slice(0, idx) +
+                        res +
+                        this.pw.password.slice(idx + element.length),
+                );
+            }
         }
+        // const sequenzes = findKeyboardSequenzes();
+        // for (const seq of sequenzes) {
+        //     if (seq.length <= 1) continue;
+        //     const results = fuzzKeyboardSquenz(seq);
+        //     const idx = this.pw.password.indexOf(seq);
+        //     for (const res of results.filter((r) => r.length > 2)) {
+        //         this.results.push(
+        //             this.pw.password.slice(0, idx) + res + this.pw.password.slice(idx + seq.length),
+        //         );
+        //     }
+        // }
     }
 
     private delete() {
