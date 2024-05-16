@@ -12,7 +12,7 @@ export async function insertBaseDataIntoAnalysedData(
 
     for (let i = 0; i < data.length; i += BATCH_SIZE) {
         const batch = data.slice(i, i + BATCH_SIZE);
-        await db.insert(analysedDataTest).values(
+        await db.insert(analysedData).values(
             batch.map((data) => ({
                 email: data.email,
                 pw: data.password,
@@ -29,10 +29,10 @@ export async function insertBaseDataIntoAnalysedData(
 export async function alreadyExists(email: string, password: string) {
     const res = await db.query.analysedData.findFirst({
         where: and(
-            eq(analysedDataTest.email, email),
-            eq(analysedDataTest.pw, password),
-            eq(analysedDataTest.pwType, "base"),
-            eq(analysedDataTest.version, CURRENT_VERSION),
+            eq(analysedData.email, email),
+            eq(analysedData.pw, password),
+            eq(analysedData.pwType, "base"),
+            eq(analysedData.version, CURRENT_VERSION),
         ),
     });
     return !res;
@@ -41,15 +41,13 @@ export async function alreadyExists(email: string, password: string) {
 async function retrieveIds(pwType: string) {
     return await db
         .select({
-            email: analysedDataTest.email,
-            password: analysedDataTest.pw,
-            isLeaked: analysedDataTest.hit,
-            databaseId: analysedDataTest.id,
+            email: analysedData.email,
+            password: analysedData.pw,
+            isLeaked: analysedData.hit,
+            databaseId: analysedData.id,
         })
-        .from(analysedDataTest)
-        .where(
-            and(eq(analysedDataTest.pwType, pwType), eq(analysedDataTest.version, CURRENT_VERSION)),
-        );
+        .from(analysedData)
+        .where(and(eq(analysedData.pwType, pwType), eq(analysedData.version, CURRENT_VERSION)));
 }
 
 export async function insertIntoAnalysedData(
@@ -61,7 +59,7 @@ export async function insertIntoAnalysedData(
 
     for (let i = 0; i < data.length; i += BATCH_SIZE) {
         const batch = data.slice(i, i + BATCH_SIZE);
-        await db.insert(analysedDataTest).values(
+        await db.insert(analysedData).values(
             batch.map((data) => ({
                 email: data.email,
                 pw: data.password,
@@ -74,10 +72,8 @@ export async function insertIntoAnalysedData(
     }
 }
 export async function isNewVersion() {
-    const BATCH_SIZE = 500;
-
-    const res = await db.query.analysedDataTest.findFirst({
-        where: and(eq(analysedDataTest.version, CURRENT_VERSION)),
+    const res = await db.query.analysedData.findFirst({
+        where: and(eq(analysedData.version, CURRENT_VERSION)),
     });
     return !res;
 }
