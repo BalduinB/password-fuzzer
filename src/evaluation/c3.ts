@@ -15,6 +15,7 @@ const TIMEOUT_AFTER_BATCH = 400;
 
 async function hasMatches(email: string, password: string) {
     assert(process.env.API_KEY, "env.API_KEY is required");
+    return Math.random() > 0.5;
     try {
         const response =
             await $`./cli-client --email="${email}" --password=${password} --api-key=${process.env.API_KEY}`.text();

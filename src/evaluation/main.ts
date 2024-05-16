@@ -2,6 +2,7 @@ import { appendLeakCheck, batchedGetLeakData } from "./c3";
 import {
     insertIntoAnalysedData,
     insertBaseDataIntoAnalysedData as insertBaseDataIntoAnalysedData,
+    isNewVersion,
 } from "./db/analysed-data";
 import { fuzzPassword } from "./generate-passwords";
 import { SAMPLE_SIZE, getDummyFromDB, getRandomPairsFromFS } from "./sample-set";
@@ -17,14 +18,19 @@ import {
 main();
 
 async function main() {
+    if (!(await isNewVersion())) throw new Error("Version already exists");
+
     while (globalBaseStats.totalPasswords < SAMPLE_SIZE) {
         try {
-            const randomDataSet = await getRandomPairsFromFS(200);
+            const randomDataSet = await getRandomPairsFromFS(
+                SAMPLE_SIZE - globalBaseStats.totalPasswords,
+            );
             // const randomDataSet = await getDummyFromDB();
-            console.log(`Got random data set ${randomDataSet.length}`);
+
             console.time("batchedGetLeakDataBase");
             const dataWithLeakHit = await batchedGetLeakData(randomDataSet);
             console.timeEnd("batchedGetLeakDataBase");
+
             globalBaseStats.totalPasswords += randomDataSet.length;
             globalBaseStats.leakedPasswords += dataWithLeakHit.filter((p) => p.isLeaked).length;
 
@@ -33,6 +39,7 @@ async function main() {
             const dataWithDbId = await insertBaseDataIntoAnalysedData(dataWithLeakHit, "base");
             console.timeEnd("insertIntoAnalysedDataBase");
             let i = 0;
+            break;
             for (const { email, password, databaseId: originalVersionId } of dataWithDbId) {
                 try {
                     console.log(`Checking: ${email} ${password} ${++i}/${dataWithDbId.length}`);

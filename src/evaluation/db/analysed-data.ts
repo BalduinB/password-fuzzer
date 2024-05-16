@@ -3,18 +3,13 @@ import { batchedGetLeakData } from "../c3";
 import { db } from "./client";
 import { analysedData, analysedDataTest } from "./schema";
 
-export const CURRENT_VERSION = "BASE2";
+export const CURRENT_VERSION = "BASE";
 export async function insertBaseDataIntoAnalysedData(
     data: Awaited<ReturnType<typeof batchedGetLeakData> & { originalVersionId?: number }>,
     pwType: string,
 ) {
     const BATCH_SIZE = 500;
-    const results: Array<{
-        email: string;
-        password: string;
-        isLeaked: boolean;
-        databaseId: number;
-    }> = [];
+
     for (let i = 0; i < data.length; i += BATCH_SIZE) {
         const batch = data.slice(i, i + BATCH_SIZE);
         await db.insert(analysedDataTest).values(
@@ -26,10 +21,9 @@ export async function insertBaseDataIntoAnalysedData(
                 hit: data.isLeaked,
             })),
         );
-        const withDbId = await retrieveIds(pwType);
-        results.push(...withDbId);
     }
-    return results;
+
+    return await retrieveIds(pwType);
 }
 
 export async function alreadyExists(email: string, password: string) {
@@ -78,4 +72,12 @@ export async function insertIntoAnalysedData(
             })),
         );
     }
+}
+export async function isNewVersion() {
+    const BATCH_SIZE = 500;
+
+    const res = await db.query.analysedDataTest.findFirst({
+        where: and(eq(analysedDataTest.version, CURRENT_VERSION)),
+    });
+    return !res;
 }
