@@ -8,52 +8,74 @@ export async function insertBaseDataIntoAnalysedData(
     data: Awaited<ReturnType<typeof batchedGetLeakData> & { originalVersionId?: number }>,
     pwType: string,
 ) {
-    await db.insert(analysedData).values(
-        data.map((data) => ({
-            email: data.email,
-            pw: data.password,
-            pwType,
-            version: CURRENT_VERSION,
-            hit: data.isLeaked,
-        })),
-    );
-    return await db
-        .select({
-            email: analysedData.email,
-            password: analysedData.pw,
-            isLeaked: analysedData.hit,
-            databaseId: analysedData.id,
-        })
-        .from(analysedData)
-        .where(and(eq(analysedData.pwType, pwType), eq(analysedData.version, CURRENT_VERSION)));
+    const BATCH_SIZE = 500;
+    const results: Array<{
+        email: string;
+        password: string;
+        isLeaked: boolean;
+        databaseId: number;
+    }> = [];
+    for (let i = 0; i < data.length; i += BATCH_SIZE) {
+        const batch = data.slice(i, i + BATCH_SIZE);
+        await db.insert(analysedDataTest).values(
+            batch.map((data) => ({
+                email: data.email,
+                pw: data.password,
+                pwType,
+                version: CURRENT_VERSION,
+                hit: data.isLeaked,
+            })),
+        );
+        const withDbId = await retrieveIds(pwType);
+        results.push(...withDbId);
+    }
+    return results;
 }
 
 export async function alreadyExists(email: string, password: string) {
     const res = await db.query.analysedData.findFirst({
         where: and(
-            eq(analysedData.email, email),
-            eq(analysedData.pw, password),
-            eq(analysedData.pwType, "base"),
-            eq(analysedData.version, CURRENT_VERSION),
+            eq(analysedDataTest.email, email),
+            eq(analysedDataTest.pw, password),
+            eq(analysedDataTest.pwType, "base"),
+            eq(analysedDataTest.version, CURRENT_VERSION),
         ),
     });
     return !res;
 }
+
+async function retrieveIds(pwType: string) {
+    return await db
+        .select({
+            email: analysedDataTest.email,
+            password: analysedDataTest.pw,
+            isLeaked: analysedDataTest.hit,
+            databaseId: analysedDataTest.id,
+        })
+        .from(analysedDataTest)
+        .where(
+            and(eq(analysedDataTest.pwType, pwType), eq(analysedDataTest.version, CURRENT_VERSION)),
+        );
+}
+
 export async function insertIntoAnalysedData(
     data: Awaited<ReturnType<typeof batchedGetLeakData>>,
     pwType: string,
     originalVersionId?: number,
 ) {
-    await Promise.all(
-        data.map(async (data) => {
-            await db.insert(analysedData).values({
+    const BATCH_SIZE = 500;
+
+    for (let i = 0; i < data.length; i += BATCH_SIZE) {
+        const batch = data.slice(i, i + BATCH_SIZE);
+        await db.insert(analysedDataTest).values(
+            batch.map((data) => ({
                 email: data.email,
                 pw: data.password,
                 pwType,
                 version: CURRENT_VERSION,
                 hit: data.isLeaked,
                 originalVersionId,
-            });
-        }),
-    );
+            })),
+        );
+    }
 }

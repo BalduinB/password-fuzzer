@@ -26,7 +26,7 @@ export const analysedDataTest = mysqlTable(
         email: varchar("email", { length: 256 }).notNull(),
         pw: varchar("pw", { length: 256 }).notNull(),
         pwType: varchar("pw_type", { length: 256 }).notNull(),
-        hit: int("hit").notNull(),
+        hit: boolean("hit").notNull(),
         originalVersionId: int("original_version_id"),
         version: varchar("version", { length: 256 }).notNull(),
     },
