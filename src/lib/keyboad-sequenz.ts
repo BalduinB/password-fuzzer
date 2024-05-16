@@ -1,53 +1,61 @@
 import { QWERTY_KEYBOARD } from "./config";
 type DirOffsets = 0 | 1 | -1;
-export function keyboardSequenzDirection(str: string) {
-    const keyboardIndexes = keyboardIndexesFromStr(str);
+type Direction = { colOff: DirOffsets; rowOff: DirOffsets };
 
-    let direction = null as { colOff: DirOffsets; rowOff: DirOffsets } | null;
-    let invalid = false;
-    let i = 0;
+export function findKeyboardSequenzes(str: string, keyboad = QWERTY_KEYBOARD) {
+    const keyboardIndexes = keyboardIndexesFromStr(str, keyboad);
+    const kbSequenzes: Array<string> = [];
+    let currentDirection: Direction | null = null;
+    let currentString = "";
+    let i = -1;
     for (const current of keyboardIndexes) {
-        if (!current) {
-            invalid = true;
-            break;
-        }
-        if (i === keyboardIndexes.length - 1) continue;
-        const next = keyboardIndexes[i + 1];
         i++;
-        if (!next) {
-            invalid = true;
-            break;
-        }
-        if (!direction) {
-            let found = false;
-            for (const currDir of DIRS) {
-                const matchingCol = next.colI === current.colI + currDir.colOff;
-                const matchingRow = next.rowI === current.rowI + currDir.rowOff;
-                if (matchingCol && matchingRow) {
-                    direction = currDir;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                invalid = true;
-                break;
-            }
+        // Char not on keyboard -> reset and check current progress
+        if (!current) {
+            if (currentString.length > 1) kbSequenzes.push(currentString);
+            currentString = "";
             continue;
         }
 
-        const matchingCol = next.colI === current.colI + direction.colOff;
-        const matchingRow = next.rowI === current.rowI + direction.rowOff;
-
-        if (!matchingCol || !matchingRow) {
-            invalid = true;
-            break;
+        const prev = keyboardIndexes[i - 1];
+        // // First char after reset or first char -> start new sequence
+        if (!prev) {
+            if (currentString.length > 1) kbSequenzes.push(currentString);
+            currentString += str[i];
+            continue;
         }
-    }
-    return invalid ? null : direction;
-}
+        // Second char -> get direction
+        if (!currentDirection) {
+            const dir = getDir(prev, current);
+            // Not a valid direction -> reset and set first char
+            if (!dir) {
+                currentString = str[i] ?? "";
+                continue;
+            }
+            // Set direction and add second char
+            currentDirection = dir;
+            currentString += str[i];
+            continue;
+        }
+        const matchingCol = current.colI === prev.colI + currentDirection.colOff;
+        const matchingRow = current.rowI === prev.rowI + currentDirection.rowOff;
 
+        // nth char not matching -> reset and check current progress
+        if (!matchingCol || !matchingRow) {
+            if (currentString.length > 1) kbSequenzes.push(currentString);
+            currentString = str[i] ?? "";
+            currentDirection = null;
+            continue;
+        }
+        // nth char matching -> add to sequence
+        currentString += str[i];
+    }
+    // Check last sequence
+    if (currentString.length > 1) kbSequenzes.push(currentString);
+    return kbSequenzes;
+}
 export function fuzzKeyboardSquenz(str: string, keyboad = QWERTY_KEYBOARD, offset = 2) {
+    if (str.length < 2) return [];
     const keyboardIndexes = keyboardIndexesFromStr(str, keyboad);
     const dirOfSequenz = keyboardSequenzDirection(str);
     if (!dirOfSequenz) return [];
@@ -100,14 +108,51 @@ function keyboardIndexesFromStr(str: string, keyboad = QWERTY_KEYBOARD) {
             return { rowI, colI };
         });
 }
+export function keyboardSequenzDirection(str: string) {
+    const keyboardIndexes = keyboardIndexesFromStr(str);
 
-const DIRS: Array<{ colOff: DirOffsets; rowOff: DirOffsets }> = [
+    let direction: Direction | null = null;
+
+    let i = 0;
+    for (const current of keyboardIndexes) {
+        if (!current) return null;
+        if (i === keyboardIndexes.length - 1) continue;
+
+        const next = keyboardIndexes[i + 1];
+        if (!next) return null;
+        i++;
+
+        if (!direction) {
+            const dir = getDir(current, next);
+            if (!dir) return null;
+            direction = dir;
+            continue;
+        }
+
+        const matchingCol = next.colI === current.colI + direction.colOff;
+        const matchingRow = next.rowI === current.rowI + direction.rowOff;
+
+        if (!matchingCol || !matchingRow) {
+            return null;
+        }
+    }
+    return direction;
+}
+const DIRS: Array<Direction> = [
     { colOff: -1, rowOff: 0 },
     { colOff: 1, rowOff: 0 },
     { colOff: 0, rowOff: -1 },
     { colOff: 0, rowOff: 1 },
 ];
 
+function getDir(current: { rowI: number; colI: number }, next: { rowI: number; colI: number }) {
+    for (const currDir of DIRS) {
+        const matchingCol = next.colI === current.colI + currDir.colOff;
+        const matchingRow = next.rowI === current.rowI + currDir.rowOff;
+
+        if (matchingCol && matchingRow) return currDir;
+    }
+}
 function maxKeyBoardRowLength(kb: Array<Array<string>>) {
     return kb.reduce((max, row) => (row.length > max ? row.length : max), 0);
 }
