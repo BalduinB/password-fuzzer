@@ -2,6 +2,7 @@ import { $ } from "bun";
 import { assert } from "console";
 import { config } from "dotenv";
 import { fuzzPassword } from "./generate-passwords";
+import { waitFor } from "@/lib/promise";
 config({
     // debug: true,
     path: "../../.env",
@@ -9,7 +10,8 @@ config({
 
 export let FAILED_CREADENTIALS_CHECK = 0;
 export let TIMEDOUT_CREADENTIALS_CHECK = 0;
-const BATCH_SIZE = 13;
+const BATCH_SIZE = 10;
+const TIMEOUT_AFTER_BATCH = 250;
 
 async function hasMatches(email: string, password: string) {
     assert(process.env.API_KEY, "env.API_KEY is required");
@@ -56,12 +58,14 @@ export async function batchedHasMatches(email: string, passwords: Array<string>)
     const results: Array<boolean> = [];
 
     for (let i = 0; i < passwords.length; i += BATCH_SIZE) {
+        // console.log("batchedHasMatches", i, "of", passwords.length);
         const batch = passwords.slice(i, i + BATCH_SIZE);
 
         const batchResults = await Promise.all(
             batch.map(async (password) => await hasMatchesTimedOut(email, password)),
         );
         results.push(...batchResults);
+        await waitFor(TIMEOUT_AFTER_BATCH);
     }
     return results;
 }
@@ -70,6 +74,7 @@ export async function batchedGetLeakData(data: Array<{ email: string; password: 
     const results: Array<{ email: string; password: string; isLeaked: boolean }> = [];
 
     for (let i = 0; i < data.length; i += BATCH_SIZE) {
+        // console.log("batchedGetLeakData", i, "of", data.length);
         const batch = data.slice(i, i + BATCH_SIZE);
         const batchResults = await Promise.all(
             batch.map(async ({ email, password }) => ({
@@ -80,6 +85,7 @@ export async function batchedGetLeakData(data: Array<{ email: string; password: 
         );
 
         results.push(...batchResults);
+        await waitFor(TIMEOUT_AFTER_BATCH);
     }
 
     return results;
