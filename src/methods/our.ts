@@ -46,18 +46,23 @@ export class OurMethod implements PasswordFuzzerMethod {
     private createFuzzedPasswords(fuzzedElements: Array<Array<string>>) {
         const results: Array<string> = [];
 
-        results.push(...this.compinePassowords(fuzzedElements));
+        const originalClassFuzzing = this.compinePassowords(fuzzedElements);
+        if (originalClassFuzzing.length > MAX_PASWORDS_PER_METHOD) {
+            tooManyGenerations.tdt += originalClassFuzzing.length - MAX_PASWORDS_PER_METHOD;
+        }
+        results.push(...originalClassFuzzing.slice(0, MAX_PASWORDS_PER_METHOD));
+
         const fuzzedClassData = this.fuzzClass(fuzzedElements);
         for (const fuzzedClass of fuzzedClassData) {
-            if (results.length > MAX_PASWORDS_PER_METHOD) {
-                tooManyGenerations.our++;
-                break;
+            const combined = this.compinePassowords(fuzzedClass);
+            const allowedRemaingPassowords = MAX_PASWORDS_PER_METHOD - results.length;
+            if (combined.length > allowedRemaingPassowords) {
+                tooManyGenerations.tdt += combined.length - allowedRemaingPassowords;
             }
-            results.push(...this.compinePassowords(fuzzedClass));
+            results.push(...combined.slice(0, allowedRemaingPassowords));
         }
-        // Keyboard Squenzes
-        results.push(...this.keyboardSquenzes());
-
+        const allowedRemaingPassowords = MAX_PASWORDS_PER_METHOD - results.length;
+        results.push(...this.keyboardSquenzes().slice(0, allowedRemaingPassowords));
         return Array.from(new Set(results));
     }
     private keyboardSquenzes() {
@@ -76,17 +81,8 @@ export class OurMethod implements PasswordFuzzerMethod {
     }
     private compinePassowords(pwClass: Array<Array<string>>) {
         return pwClass.reduce((acc, curr) => {
-            if (acc.length > MAX_PASWORDS_PER_METHOD) {
-                tooManyGenerations.our++;
-                console.log("Max Passwords reached", acc.length);
-                return acc;
-            }
             if (acc.length === 0) return curr;
             const resultets = acc.flatMap((x) => curr.map((y) => x + y));
-            if (resultets.length > MAX_PASWORDS_PER_METHOD) {
-                tooManyGenerations.our++;
-                return resultets.slice(0, MAX_PASWORDS_PER_METHOD);
-            }
             return resultets;
         }, [] as Array<string>);
     }

@@ -111,7 +111,7 @@ export async function walkWhile(
         const filePath = path.resolve(basePath, file);
 
         if (file !== FILES_TO_SKIP) {
-            console.log("READING FILE", filePath.slice(basePathOfBreachData.length + 1));
+            // console.log("READING FILE", filePath.slice(basePathOfBreachData.length + 1));
             const content = await readFile(filePath);
             onIsFile(content);
         } else console.log("DS_STORE");

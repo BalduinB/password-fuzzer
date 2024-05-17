@@ -22,9 +22,7 @@ async function main() {
 
     while (globalBaseStats.totalPasswords < SAMPLE_SIZE) {
         try {
-            const randomDataSet = await getRandomPairsFromFS(
-                SAMPLE_SIZE - globalBaseStats.totalPasswords,
-            );
+            const randomDataSet = await getRandomPairsFromFS(globalBaseStats.totalPasswords);
             // const randomDataSet = await getDummyFromDB();
 
             console.time("batchedGetLeakDataBase");
@@ -39,7 +37,7 @@ async function main() {
             const dataWithDbId = await insertBaseDataIntoAnalysedData(dataWithLeakHit, "base");
             console.timeEnd("insertIntoAnalysedDataBase");
             let i = 0;
-            break;
+
             for (const { email, password, databaseId: originalVersionId } of dataWithDbId) {
                 try {
                     console.log(`Checking: ${email} ${password} ${++i}/${dataWithDbId.length}`);
