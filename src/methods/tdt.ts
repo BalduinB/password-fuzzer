@@ -66,7 +66,13 @@ export class TDTMethod implements PasswordFuzzerMethod {
     }
 
     private compinePassowords(pwClass: Array<Array<string>>) {
+        let didLog = false;
         return pwClass.reduce((acc, curr) => {
+            if (acc.length > MAX_PASWORDS_PER_METHOD * 10) {
+                if (!didLog) console.log("Max Passwords reached", acc.length);
+                didLog = true;
+                return acc;
+            }
             if (acc.length === 0) return curr;
             const resultets = acc.flatMap((x) => curr.map((y) => x + y));
             return resultets;

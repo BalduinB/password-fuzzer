@@ -8,8 +8,8 @@ let numberOfFiles = 0;
 let invalidDomains = 0;
 
 const domainsMap = new Map<string, number>();
-main();
-async function main() {
+
+export async function emailDomains() {
     await walkWhile(basePathOfBreachData, () => true, analyseFile);
     console.log("DONE");
     console.log(`${invalidLineFormat} invalide Lines`);

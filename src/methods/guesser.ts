@@ -1,5 +1,5 @@
 import { shuffle } from "@/lib/array";
-import { findKeyboardSequenzes, fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
+import { fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
 import { isNumberStr, isSymbolStr, isUpperCase } from "@/lib/password";
 import { removeCharAt } from "@/lib/string";
 import { Password } from "@/password";

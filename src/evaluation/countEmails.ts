@@ -6,8 +6,7 @@ let invalidEmails = 0;
 let totalLines = 0;
 let invalidLineFormat = 0;
 let numberOfFiles = 0;
-main();
-async function main() {
+export async function countEmails() {
     await walkWhile(basePathOfBreachData, () => true, analyseFile);
     console.log("DONE");
     console.log(`${validEmails} valide Emails`);
