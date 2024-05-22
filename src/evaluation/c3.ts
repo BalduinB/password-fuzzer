@@ -3,15 +3,16 @@ import { assert } from "console";
 import { config } from "dotenv";
 import { fuzzPassword } from "./generate-passwords";
 import { waitFor } from "@/lib/promise";
+import { logGlobalStats } from "./stats";
 config({
     // debug: true,
     path: "../../.env",
 });
 
-export let FAILED_CREADENTIALS_CHECK = 0;
-export let TIMEDOUT_CREADENTIALS_CHECK = 0;
+export let FAILED_CREADENTIALS_CHECK = 0; //12_070;
+export let TIMEDOUT_CREADENTIALS_CHECK = 0; //62;
 const BATCH_SIZE = 10;
-const TIMEOUT_AFTER_BATCH = 400;
+const TIMEOUT_AFTER_BATCH = 500;
 
 async function hasMatches(email: string, password: string) {
     assert(process.env.API_KEY, "env.API_KEY is required");
@@ -59,7 +60,7 @@ export async function batchedHasMatches(email: string, passwords: Array<string>)
     const results: Array<boolean> = [];
 
     for (let i = 0; i < passwords.length; i += BATCH_SIZE) {
-        // console.log("batchedHasMatches", i, "of", passwords.length);
+        console.log("batchedHasMatches", i, "of", passwords.length);
         const batch = passwords.slice(i, i + BATCH_SIZE);
 
         const batchResults = await Promise.all(
@@ -87,6 +88,7 @@ export async function batchedGetLeakData(data: Array<{ email: string; password: 
 
         results.push(...batchResults);
         await waitFor(TIMEOUT_AFTER_BATCH);
+        logGlobalStats();
     }
 
     return results;
