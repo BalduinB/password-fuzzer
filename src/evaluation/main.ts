@@ -3,6 +3,7 @@ import {
     insertIntoAnalysedData,
     insertBaseDataIntoAnalysedData as insertBaseDataIntoAnalysedData,
     isNewVersion,
+    getBaseDataFromDB,
 } from "./db/analysed-data";
 import { fuzzPassword } from "./generate-passwords";
 import { SAMPLE_SIZE, getDummyFromDB, getRandomPairsFromFS } from "./sample-set";
@@ -15,35 +16,26 @@ import {
     logGlobalStats,
 } from "./stats";
 
-main();
-
-async function main() {
+export async function main() {
     if (!(await isNewVersion())) throw new Error("Version already exists");
 
     while (globalBaseStats.totalPasswords < SAMPLE_SIZE) {
         try {
-            const randomDataSet = await getRandomPairsFromFS(globalBaseStats.totalPasswords);
-            // const randomDataSet = await getDummyFromDB();
+            const dataWithDbId = await getBaseSet();
 
-            console.time("batchedGetLeakDataBase");
-            const dataWithLeakHit = await batchedGetLeakData(randomDataSet);
-            console.timeEnd("batchedGetLeakDataBase");
-
-            globalBaseStats.totalPasswords += randomDataSet.length;
-            globalBaseStats.leakedPasswords += dataWithLeakHit.filter((p) => p.isLeaked).length;
-
-            logGlobalStats();
-            console.time("insertIntoAnalysedDataBase");
-            const dataWithDbId = await insertBaseDataIntoAnalysedData(dataWithLeakHit, "base");
-            console.timeEnd("insertIntoAnalysedDataBase");
             let i = 0;
-
             for (const { email, password, databaseId: originalVersionId } of dataWithDbId) {
+                i++;
                 try {
-                    console.log(`Checking: ${email} ${password} ${++i}/${dataWithDbId.length}`);
-
+                    console.log(
+                        `Checking: ${email} ${password} DB:${originalVersionId} ${i}/${dataWithDbId.length}`,
+                    );
                     const fuzzedPasswords = fuzzPassword(password);
+                    logGlobalStats();
+                    console.time("appendLeak");
                     const leakedResults = await appendLeakCheck(email, fuzzedPasswords);
+                    console.timeEnd("appendLeak");
+                    console.time("insert");
                     for (const { method, leakChecks } of leakedResults) {
                         await insertIntoAnalysedData(
                             leakChecks.map((data) => ({ ...data, email })),
@@ -51,6 +43,7 @@ async function main() {
                             originalVersionId,
                         );
                     }
+                    console.timeEnd("insert");
                     const statsOfPair = calculateStatistics(leakedResults, password);
 
                     for (const { method, ...stats } of statsOfPair) {
@@ -70,4 +63,28 @@ async function main() {
             console.error("LOOP THROW", error);
         }
     }
+    console.info("FINISH!!!");
+}
+
+async function getBaseSet() {
+    const randomDataSet = await getRandomPairsFromFS(globalBaseStats.totalPasswords);
+
+    console.time("batchedGetLeakDataBase");
+    const dataWithLeakHit = await batchedGetLeakData(randomDataSet);
+    console.timeEnd("batchedGetLeakDataBase");
+
+    globalBaseStats.totalPasswords += randomDataSet.length;
+    globalBaseStats.leakedPasswords += dataWithLeakHit.filter((p) => p.isLeaked).length;
+
+    logGlobalStats();
+    console.time("insertIntoAnalysedDataBase");
+    const dataWithDbId = await insertBaseDataIntoAnalysedData(dataWithLeakHit, "base");
+    console.timeEnd("insertIntoAnalysedDataBase");
+    return dataWithDbId;
+}
+
+async function retrievFromDB() {
+    const data = await getBaseDataFromDB();
+    logGlobalStats();
+    return data;
 }

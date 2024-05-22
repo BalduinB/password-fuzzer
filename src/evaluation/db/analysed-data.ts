@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { batchedGetLeakData } from "../c3";
 import { db } from "./client";
 import { analysedData, analysedDataTest } from "./schema";
+import { globalBaseStats } from "../stats";
 
 export const CURRENT_VERSION = "BASE";
 export async function insertBaseDataIntoAnalysedData(
@@ -76,4 +77,24 @@ export async function isNewVersion() {
         where: and(eq(analysedData.version, CURRENT_VERSION)),
     });
     return !res;
+}
+
+export async function getBaseDataFromDB() {
+    const data = await db.query.analysedData.findMany({
+        where: and(eq(analysedData.pwType, "base"), eq(analysedData.version, CURRENT_VERSION)),
+        with: { fuzzedPasswords: { limit: 1 } },
+    });
+
+    const notFuzzedBasePasswords = data
+        .filter((d) => !d.fuzzedPasswords.length)
+        .map((data) => ({
+            email: data.email,
+            password: data.pw,
+            isLeaked: data.hit,
+            databaseId: data.id,
+        }));
+    globalBaseStats.totalPasswords = 30000;
+    globalBaseStats.leakedPasswords = data.filter((p, i) => i < 30000 && p.hit).length;
+    const alreadyFuzzedBasePasswords = data.length - notFuzzedBasePasswords.length;
+    return notFuzzedBasePasswords.slice(0, 30000 - alreadyFuzzedBasePasswords);
 }

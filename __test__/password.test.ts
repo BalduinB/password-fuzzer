@@ -16,13 +16,17 @@ describe("Password", () => {
         expect(pw).toBeDefined();
     });
     test("Mask", () => {
-        expect(pw.getMask()).eq(testConfig.mask);
+        expect(pw.getMask()).toEqual(testConfig.mask);
     });
     test("Class", () => {
-        expect(pw.getClass()).eq(testConfig.class);
+        expect(pw.getClass()).toEqual(testConfig.class);
     });
     test("Elements", () => {
         const elements = pw.getElements();
         expect(elements).toEqual(testConfig.elements);
+    });
+    test("hasNumbers", () => {
+        // const elements = pw.hasNumbers();
+        expect(pw.hasNumbers()).toEqual(true);
     });
 });
