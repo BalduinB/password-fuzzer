@@ -6,7 +6,7 @@ import { analysedDataTest } from "./db/schema";
 import { alreadyExists } from "./db/analysed-data";
 
 const NUMBER_OF_ENTRIES = 3_279_064_311;
-export const SAMPLE_SIZE = 40_000;
+export const SAMPLE_SIZE = 30_000;
 
 export async function getRandomPairsFromFS(curentCount: number) {
     const randomIds = getRandomIds(SAMPLE_SIZE - curentCount);
