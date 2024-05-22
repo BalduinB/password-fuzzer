@@ -17,6 +17,7 @@ export const analysedData = mysqlTable(
         hitIdx: index("hit_idx").on(table.hit),
         pwTypeIdx: index("pw_type_idx").on(table.pwType),
         versionIdx: index("version_idx").on(table.version),
+        originalVersionIdx: index("original_version_idx").on(table.originalVersionId),
     }),
 );
 export const analysedDataTest = mysqlTable(
