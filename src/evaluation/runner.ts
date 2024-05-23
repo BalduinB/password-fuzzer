@@ -1,3 +1,5 @@
+import { calculateGuesserLeakedStats, calculateGuesserNotLeakedStats } from "./analyse-guesser";
 import { main } from "./main";
 
-main();
+calculateGuesserLeakedStats();
+calculateGuesserNotLeakedStats();

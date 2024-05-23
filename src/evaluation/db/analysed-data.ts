@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { batchedGetLeakData } from "../c3";
 import { db } from "./client";
 import { analysedData, analysedDataTest } from "./schema";
@@ -79,7 +79,7 @@ export async function isNewVersion() {
     return !res;
 }
 
-export async function getBaseDataFromDB() {
+export async function getOpenBaseDataFromDB() {
     const data = await db.query.analysedData.findMany({
         where: and(eq(analysedData.pwType, "base"), eq(analysedData.version, CURRENT_VERSION)),
         with: { fuzzedPasswords: { limit: 1 } },
@@ -98,3 +98,57 @@ export async function getBaseDataFromDB() {
     const alreadyFuzzedBasePasswords = data.length - notFuzzedBasePasswords.length;
     return notFuzzedBasePasswords.slice(0, 30000 - alreadyFuzzedBasePasswords);
 }
+export async function getBaseDataFromDB() {
+    return await db.query.analysedData.findMany({
+        where: and(eq(analysedData.pwType, "base"), eq(analysedData.version, CURRENT_VERSION)),
+    });
+}
+
+export async function passwordsOfMethodAndVersion(
+    method: string,
+    isLeaked?: boolean,
+    version = CURRENT_VERSION,
+    type: "ALL" | "UNIQUE_TO_METHOD" = "ALL",
+) {
+    const data = await db
+        .select({
+            pw: analysedData.pw,
+            pwType: analysedData.pwType,
+            originalVersion: subQuery.pw,
+            originalVersionId: subQuery.id,
+        })
+        .from(analysedData)
+        .innerJoin(subQuery, eq(subQuery.id, analysedData.originalVersionId))
+        .where(
+            and(
+                eq(analysedData.version, version),
+                eq(analysedData.pwType, method),
+                isLeaked !== undefined ? eq(analysedData.hit, isLeaked) : undefined,
+            ),
+        );
+
+    if (type === "ALL") return data;
+    const filter = [];
+    for (const item of data) {
+        if (!isUniquePw(item, version)) continue;
+
+        filter.push(item);
+    }
+    return filter;
+}
+
+async function isUniquePw(
+    item: { pw: string; originalVersionId: number; pwType: string },
+    version: string,
+) {
+    return !(await db.query.analysedData.findFirst({
+        where: and(
+            eq(analysedData.pw, item.pw),
+            eq(analysedData.version, version),
+            eq(analysedData.originalVersionId, item.originalVersionId),
+            ne(analysedData.pwType, item.pwType),
+        ),
+    }));
+}
+
+const subQuery = db.select().from(analysedData).as("subQuery");

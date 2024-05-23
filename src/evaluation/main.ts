@@ -3,7 +3,7 @@ import {
     insertIntoAnalysedData,
     insertBaseDataIntoAnalysedData as insertBaseDataIntoAnalysedData,
     isNewVersion,
-    getBaseDataFromDB,
+    getOpenBaseDataFromDB,
 } from "./db/analysed-data";
 import { fuzzPassword } from "./generate-passwords";
 import { SAMPLE_SIZE, getDummyFromDB, getRandomPairsFromFS } from "./sample-set";
@@ -83,8 +83,8 @@ async function getBaseSet() {
     return dataWithDbId;
 }
 
-async function retrievFromDB() {
-    const data = await getBaseDataFromDB();
+export async function retrievFromDB() {
+    const data = await getOpenBaseDataFromDB();
     logGlobalStats();
     return data;
 }
