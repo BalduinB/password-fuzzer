@@ -1,29 +1,40 @@
 import { nGrams } from "@/methods/guesser";
-import { GuesserMethod, Password } from "..";
+import { GuesserMethod, OurMethod, Password } from "..";
 import { passwordsOfMethodAndVersion } from "./db/analysed-data";
 import { isNumberStr } from "@/lib/password";
 
 export async function calculateGuesserLeakedStats() {
-    const guesserLeakedData = await passwordsOfMethodAndVersion("guesser", true);
+    const guesserLeakedData = await passwordsOfMethodAndVersion({
+        method: "guesser",
+        isLeaked: true,
+        type: "UNIQUE_TO_METHOD",
+    });
     console.log(`AMOUN: ${guesserLeakedData.length}`);
-    const stats: Record<string, number> = {};
+    const statsGuesser: Record<string, number> = {};
+    const statsOur: Record<string, number> = {};
     const statsMethod: Record<string, number> = {};
-    let ngramsstart = 0;
-    let ngramsend = 0;
-    let start = 0;
-    let end = 0;
-    let numbers = 0;
-    let spezials = 0;
+    // let ngramsstart = 0;
+    // let ngramsend = 0;
+    // let start = 0;
+    // let end = 0;
+    // let numbers = 0;
+    // let spezials = 0;
     for (const { pw, originalVersion } of guesserLeakedData) {
         const guesser = new GuesserMethod(new Password(originalVersion));
-        const creationMethod = guesser.fuzzingMethodOf(pw);
-        if (creationMethod === "unknown") {
+        const our = new OurMethod(new Password(originalVersion));
+        const guesserCreationMethod = guesser.fuzzingMethodOf(pw);
+        const ourCreationMethod = our.fuzzingMethodOf(pw);
+        if (guesserCreationMethod === "unknown") {
             // console.log("unknown", pw, originalVersion);
         }
-        if (!stats[creationMethod]) {
-            stats[creationMethod] = 0;
+        if (!statsGuesser[guesserCreationMethod]) {
+            statsGuesser[guesserCreationMethod] = 0;
         }
-
+        if (!statsOur[ourCreationMethod]) {
+            statsOur[ourCreationMethod] = 0;
+        }
+        statsGuesser[guesserCreationMethod]++;
+        statsOur[ourCreationMethod]++;
         // if (creationMethod === "insert") {
         //     onIsInsert(statsInsert, pw, originalVersion);
         // }
@@ -33,19 +44,21 @@ export async function calculateGuesserLeakedStats() {
         //     else spezials++;
         //     console.log(pw, originalVersion, removed);
         // }
-        if (creationMethod === "leet") {
-            onIsLeet(statsMethod, pw, originalVersion, true);
-        }
-        stats[creationMethod]++;
+        // if (creationMethod === "leet") {
+        //     onIsLeet(statsMethod, pw, originalVersion, true);
+        // }
     }
-    console.log(
-        stats,
-        // `ngramsstart: ${ngramsstart}; ngramsend: ${ngramsend} numbers: ${numbers} spezials: ${spezials} at start: ${start} at end: ${end}`,
-    );
+
+    console.table([statsGuesser]);
+    console.table([statsOur]);
+
     console.table(Object.entries(statsMethod).sort((a, b) => b[1] - a[1]));
 }
 export async function calculateGuesserNotLeakedStats() {
-    const guesserLeakedData = await passwordsOfMethodAndVersion("guesser", false);
+    const guesserLeakedData = await passwordsOfMethodAndVersion({
+        method: "guesser",
+        isLeaked: false,
+    });
     const stats: Record<string, number> = {};
     const statsMethod: Record<string, number> = {};
     for (const { pw, originalVersion } of guesserLeakedData) {

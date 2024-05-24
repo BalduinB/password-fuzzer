@@ -2,4 +2,4 @@ import { calculateGuesserLeakedStats, calculateGuesserNotLeakedStats } from "./a
 import { main } from "./main";
 
 calculateGuesserLeakedStats();
-calculateGuesserNotLeakedStats();
+// calculateGuesserNotLeakedStats();
