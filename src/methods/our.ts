@@ -1,146 +1,157 @@
-import { tooManyGenerations } from "@/evaluation/stats";
-import { MAX_PASWORDS_PER_METHOD } from "@/lib/config";
-import { fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
-import { calculateClass } from "@/lib/password";
-import {
-    countUp,
-    expandNumberSequence,
-    isNumberSequence,
-    onlyFirstCharUpper,
-    onlyLastCharUpper,
-} from "@/lib/string";
+import { shuffle } from "@/lib/array";
+import { MAX_PASWORDS_PER_METHOD, QWERTY_KEYBOARD, QWERTZ_KEYBOARD } from "@/lib/config";
+import { findKeyboardSequenzes, fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
+import { getLeetedChars, isLeetalble } from "@/lib/leet";
+import { isNumberStr, isSymbolStr, isUpperCase } from "@/lib/password";
+import { isLetterOnly, removeCharAt } from "@/lib/string";
 import { Password } from "@/password";
 import { PasswordFuzzerMethod } from "@/types/fuzzer";
 
-/** This class implememnts methods from the TDT Modell found in `Password cracking based on learned patterns from disclosed passwords`
- *
- * Fuzzing Workflow:
- * 1. Fuzz Alphastrings (alphanumeric parts)
- * 2. Fuzz Numbers
- * 3. Fuzz Specials
- * 4. Combine all fuzzed parts as Password Class defines
- * @link{https://core.ac.uk/download/pdf/225229085.pdf}
- */
 export class OurMethod implements PasswordFuzzerMethod {
+    private results: Array<string> = [];
     private readonly pw: Password;
 
     constructor(pw: Password) {
         this.pw = pw;
+
+        this.results.push(pw.password);
     }
 
     fuzz() {
-        const elements = this.pw.getElementsWithAlphaString();
-        const elementsWithOptions = elements.map((element) => {
-            const classOfElement = calculateClass(element);
-            if (classOfElement === "N") return this.fuzzNumber(element);
-            if (classOfElement.includes("U") || classOfElement.includes("L"))
-                return this.fuzzAlpha(element);
-            if (classOfElement === "S") return this.fuzzSpecial(element);
-            if (classOfElement === "X") return [element];
-            else return [element];
-        });
-
-        return this.createFuzzedPasswords(elementsWithOptions);
+        this.keyboardSquenzes();
+        this.delete();
+        this.insert();
+        this.casing();
+        this.reverse();
+        this.leet();
+        this.moveSubString();
+        return Array.from(new Set(this.results));
+    }
+    fuzzingMethodOf(pw: string) {
+        this.keyboardSquenzes();
+        if (this.results.includes(pw)) return "keyboardSequenz";
+        this.delete();
+        if (this.results.includes(pw)) return "delete";
+        this.insert();
+        if (this.results.includes(pw)) return "insert";
+        this.casing();
+        if (this.results.includes(pw)) return "casing";
+        this.reverse();
+        if (this.results.includes(pw)) return "reverse";
+        this.leet();
+        if (this.results.includes(pw)) return "leet";
+        this.moveSubString();
+        if (this.results.includes(pw)) return "moveSubString";
+        else return "unknown"; // either moveSubString or unknown, because moveSubString is random
     }
 
-    private createFuzzedPasswords(fuzzedElements: Array<Array<string>>) {
-        const results: Array<string> = [];
-
-        const originalClassFuzzing = this.compinePassowords(fuzzedElements);
-        if (originalClassFuzzing.length > MAX_PASWORDS_PER_METHOD) {
-            tooManyGenerations.tdt += originalClassFuzzing.length - MAX_PASWORDS_PER_METHOD;
-        }
-        results.push(...originalClassFuzzing.slice(0, MAX_PASWORDS_PER_METHOD));
-
-        const fuzzedClassData = this.fuzzClass(fuzzedElements);
-        for (const fuzzedClass of fuzzedClassData) {
-            const combined = this.compinePassowords(fuzzedClass);
-            const allowedRemaingPassowords = MAX_PASWORDS_PER_METHOD - results.length;
-            if (combined.length > allowedRemaingPassowords) {
-                tooManyGenerations.tdt += combined.length - allowedRemaingPassowords;
-            }
-            results.push(...combined.slice(0, allowedRemaingPassowords));
-        }
-        const allowedRemaingPassowords = MAX_PASWORDS_PER_METHOD - results.length;
-        results.push(...this.keyboardSquenzes().slice(0, allowedRemaingPassowords));
-        return Array.from(new Set(results));
-    }
     private keyboardSquenzes() {
-        const pwResults: Array<string> = [];
-        const elements = this.pw.getElements();
-        for (const element of elements) {
-            const results = fuzzKeyboardSquenz(element);
-            const indexOfElement = elements.indexOf(element);
-            if (results.length === 0) continue;
-
-            pwResults.push(
-                ...this.compinePassowords(elements.map((x) => [x]).with(indexOfElement, results)),
-            );
-        }
-        return pwResults;
-    }
-    private compinePassowords(pwClass: Array<Array<string>>) {
-        return pwClass.reduce((acc, curr) => {
-            if (acc.length === 0) return curr;
-            const resultets = acc.flatMap((x) => curr.map((y) => x + y));
-            return resultets;
-        }, [] as Array<string>);
-    }
-
-    private fuzzClass(fuzzedElements: Array<Array<string>>) {
-        // Based on the Top 15 most common classes
-        const fuzzed = [];
-        if (this.pw.isAlphabeticOnly()) {
-            fuzzed.push(
-                [...fuzzedElements, POPULAR_NUMBER_PARTS],
-                [POPULAR_NUMBER_PARTS, ...fuzzedElements],
-                [...fuzzedElements, POPULAR_SINGLE_SPEZIAL_PARTS],
-            );
-        }
-        return fuzzed;
-    }
-
-    private fuzzNumber(str: string) {
-        const results = [str];
-
-        // Based on the number string length (Table 5)
-        if (isNumberSequence(str) && str.length < 4) {
-            const expanded = expandNumberSequence(str, Math.min(4, 4 - str.length));
-            results.push(...expanded);
-
-            const removed: Array<string> = [];
-            const chars = str.split("");
-            while (chars.length > 1) {
-                chars.pop();
-                removed.push(chars.join(""));
+        for (const keyboard of [QWERTZ_KEYBOARD, QWERTY_KEYBOARD]) {
+            const sequenzes = findKeyboardSequenzes(this.pw.password, keyboard);
+            if (sequenzes.length) console.log(this.pw.password, sequenzes);
+            for (const seq of sequenzes) {
+                if (seq.length <= 1) continue;
+                const results = fuzzKeyboardSquenz(seq, keyboard);
+                const idx = this.pw.password.indexOf(seq);
+                for (const res of results.filter((r) => r.length > 2)) {
+                    this.results.push(
+                        this.pw.password.slice(0, idx) +
+                            res +
+                            this.pw.password.slice(idx + seq.length),
+                    );
+                }
             }
-            results.push(...removed);
+            if (sequenzes.length) console.log("DONE OUR");
         }
-        const counted = countUp(str);
-        results.push(...counted);
-
-        return Array.from(new Set(results));
     }
 
-    private fuzzAlpha(str: string) {
-        const results = [str];
-        const lower = str.toLowerCase();
-        const upper = str.toUpperCase();
+    private delete() {
+        if (this.pw.tooShort()) return;
 
-        results.push(lower);
-        results.push(upper);
+        const allElements = this.pw.getElements();
 
-        results.push(onlyFirstCharUpper(str));
-        results.push(onlyLastCharUpper(str));
+        for (let i = 0; i < allElements.length; i++) {
+            const element = allElements[i];
+            if (!element) continue;
+            const isDeleteable = [isNumberStr, isSymbolStr, isUpperCase].some((fn) => fn(element));
+            if (!isDeleteable) continue;
 
-        return Array.from(new Set(results));
+            for (let j = 0; j < element.length; j++) {
+                const newElement = removeCharAt(element, j);
+                this.results.push(allElements.with(i, newElement).join(""));
+            }
+        }
     }
 
-    private fuzzSpecial(str: string) {
-        return [str, ...POPULAR_SINGLE_SPEZIAL_PARTS];
+    private insert() {
+        if (this.pw.tooLong()) return;
+
+        if (!this.pw.hasSpecialChar()) {
+            for (const char of POP_SPEZIAL_CHARS) {
+                this.results.push(this.pw.password, char);
+            }
+        }
+        if (!this.pw.hasNumbers()) {
+            for (const num of POP_NUMBER_CHARS) {
+                this.results.push(this.pw.password + num);
+            }
+        }
+        //Top 3 Bigrams and Trigrams
+        const nGrams = ["01", "123"];
+        for (const nGram of nGrams) {
+            this.results.push(...this.addToStartAndEnd(this.pw.password, nGram));
+        }
+    }
+    private addToStartAndEnd(base: string, toAdd: string | number) {
+        return [toAdd + base, base + toAdd];
+    }
+    private casing() {
+        const uppered = this.pw.password.toUpperCase();
+        const upperedFirst = this.pw.password.slice(0, 1).toUpperCase() + this.pw.password.slice(1);
+        const upperedLast =
+            this.pw.password.slice(0, -1) + this.pw.password.slice(-1).toUpperCase();
+        const upperFirstandLast =
+            this.pw.password.slice(0, 1).toUpperCase() +
+            this.pw.password.slice(1, -1) +
+            this.pw.password.slice(-1).toUpperCase();
+        const lower = this.pw.password.toLowerCase();
+        this.results.push(uppered, upperedFirst, upperedLast, upperFirstandLast, lower);
+    }
+    private reverse() {
+        this.results.push(this.pw.password.split("").reverse().join(""));
+    }
+    private leet() {
+        // not leeting letters to synonims
+        const elements = this.pw.getElements();
+        let index = -1;
+        for (const element of elements) {
+            index++;
+            if (element.length > 1 || !isLeetalble(element, LEET_MAP)) continue;
+            const prev = elements[index - 1];
+            const next = elements[index + 1];
+            if ((prev && !isLetterOnly(prev)) || (next && !isLetterOnly(next))) continue;
+            const leeted = getLeetedChars(element, LEET_MAP);
+            for (const leet of leeted) {
+                this.results.push(elements.with(index, leet).join(""));
+            }
+        }
+    }
+    private moveSubString() {
+        const elements = this.pw.getElements();
+        for (let i = 0; i < 3; i++) {
+            const randomized = shuffle(elements);
+            this.results.push(randomized.join(""));
+        }
     }
 }
+const POP_SPEZIAL_CHARS = ["!", "?", "@", ".", "*"];
+const POP_NUMBER_CHARS = ["0", "1", "2", "3", "8"];
 
-const POPULAR_NUMBER_PARTS = ["1", "12", "13", "11", "22", "23", "07"];
-// Based on the most common special characters (Table 8)
-const POPULAR_SINGLE_SPEZIAL_PARTS = ["!", ".", "*", "@"];
+export const LEET_MAP: Record<string, Array<string>> = {
+    o: ["0"],
+    a: ["4", "@"],
+    s: ["$"],
+    i: ["1"],
+    e: ["3"],
+    t: ["7"],
+};
