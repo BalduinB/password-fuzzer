@@ -1,5 +1,6 @@
 import { shuffle } from "@/lib/array";
 import { fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
+import { getLeetedChars } from "@/lib/leet";
 import { isNumberStr, isSymbolStr, isUpperCase } from "@/lib/password";
 import { removeCharAt } from "@/lib/string";
 import { Password } from "@/password";
@@ -40,12 +41,30 @@ export class GuesserMethod implements PasswordFuzzerMethod {
         this.moveSubString();
         return Array.from(new Set(this.results));
     }
+    fuzzingMethodOf(pw: string) {
+        this.keyboardSquenzes();
+        if (this.results.includes(pw)) return "keyboardSequenz";
+        this.delete();
+        if (this.results.includes(pw)) return "delete";
+        this.insert();
+        if (this.results.includes(pw)) return "insert";
+        this.capitalize();
+        if (this.results.includes(pw)) return "capitalize";
+        this.reverse();
+        if (this.results.includes(pw)) return "reverse";
+        this.leet();
+        if (this.results.includes(pw)) return "leet";
+        this.moveSubString();
+        if (this.results.includes(pw)) return "moveSubString";
+        else return "unknown"; // either moveSubString or unknown, because moveSubString is random
+    }
 
     private keyboardSquenzes() {
         const elements = this.pw.getElements();
         for (const element of elements) {
             if (element.length <= 1) continue;
             const results = fuzzKeyboardSquenz(element);
+            if (results.length) console.log(this.pw.password, results);
             const idx = this.pw.password.indexOf(element);
             for (const res of results) {
                 this.results.push(
@@ -54,18 +73,8 @@ export class GuesserMethod implements PasswordFuzzerMethod {
                         this.pw.password.slice(idx + element.length),
                 );
             }
+            if (results.length) console.log("DONE GUESSER");
         }
-        // const sequenzes = findKeyboardSequenzes();
-        // for (const seq of sequenzes) {
-        //     if (seq.length <= 1) continue;
-        //     const results = fuzzKeyboardSquenz(seq);
-        //     const idx = this.pw.password.indexOf(seq);
-        //     for (const res of results.filter((r) => r.length > 2)) {
-        //         this.results.push(
-        //             this.pw.password.slice(0, idx) + res + this.pw.password.slice(idx + seq.length),
-        //         );
-        //     }
-        // }
     }
 
     private delete() {
@@ -99,8 +108,7 @@ export class GuesserMethod implements PasswordFuzzerMethod {
                 this.results.push(...this.addToStartAndEnd(this.pw.password, i));
             }
         }
-        //Top 3 Bigrams and Trigrams
-        const nGrams = ["08", "01", "07", "123", "087", "007"];
+
         for (const nGram of nGrams) {
             this.results.push(...this.addToStartAndEnd(this.pw.password, nGram));
         }
@@ -127,7 +135,7 @@ export class GuesserMethod implements PasswordFuzzerMethod {
         const charSet = new Set(this.pw.password.split(""));
         const leetAlphabet = new Map<string, Array<string>>();
         for (const c of charSet) {
-            leetAlphabet.set(c, getLeetedChars(c));
+            leetAlphabet.set(c, getLeetedChars(c, LEET_MAP));
         }
         for (const [char, leet] of leetAlphabet) {
             const idxsOfChar = this.pw.indexesOf(char);
@@ -152,6 +160,8 @@ export class GuesserMethod implements PasswordFuzzerMethod {
 }
 const POP_SPEZIAL_CHARS = ["!", ".", "*", "@", "_", "?", "-"];
 
+//Top 3 Bigrams and Trigrams
+export const nGrams = ["08", "01", "07", "123", "087", "007"];
 export const LEET_MAP: Record<string, Array<string>> = {
     o: ["0"],
     a: ["4", "@"],
@@ -160,19 +170,3 @@ export const LEET_MAP: Record<string, Array<string>> = {
     e: ["3"],
     t: ["7"],
 };
-
-export function isLeetalble(c: string) {
-    c = c.toLowerCase();
-    return c in LEET_MAP || Object.values(LEET_MAP).some((v) => v.includes(c));
-}
-export function getLeetedChars(char: string) {
-    char = char.toLowerCase();
-
-    const leetChars = LEET_MAP[char];
-    if (leetChars) return leetChars;
-
-    return Object.entries(LEET_MAP).reduce((possibleReplacements, [k, v]) => {
-        if (v.includes(char)) possibleReplacements.push(k);
-        return possibleReplacements;
-    }, [] as Array<string>);
-}

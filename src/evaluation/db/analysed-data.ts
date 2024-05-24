@@ -104,12 +104,14 @@ export async function getBaseDataFromDB() {
     });
 }
 
-export async function passwordsOfMethodAndVersion(
-    method: string,
-    isLeaked?: boolean,
-    version = CURRENT_VERSION,
-    type: "ALL" | "UNIQUE_TO_METHOD" = "ALL",
-) {
+export async function passwordsOfMethodAndVersion(args: {
+    method: string;
+    isLeaked?: boolean;
+    version?: string;
+    basePassword?: string;
+    type?: "ALL" | "UNIQUE_TO_METHOD";
+}) {
+    const { method, isLeaked, basePassword, version = CURRENT_VERSION, type = "ALL" } = args;
     const data = await db
         .select({
             pw: analysedData.pw,
@@ -124,13 +126,16 @@ export async function passwordsOfMethodAndVersion(
                 eq(analysedData.version, version),
                 eq(analysedData.pwType, method),
                 isLeaked !== undefined ? eq(analysedData.hit, isLeaked) : undefined,
+                basePassword ? eq(subQuery.pw, basePassword) : undefined,
             ),
         );
 
     if (type === "ALL") return data;
     const filter = [];
     for (const item of data) {
-        if (!isUniquePw(item, version)) continue;
+        if (!(await isUniquePw(item, version))) {
+            continue;
+        }
 
         filter.push(item);
     }
