@@ -68,3 +68,6 @@ export function upperFirst(str: string) {
 export function removeCharAt(str: string, index: number) {
     return str.slice(0, index) + str.slice(index + 1);
 }
+export function isLetterOnly(str: string) {
+    return /^[a-zA-Z]+$/.test(str);
+}
