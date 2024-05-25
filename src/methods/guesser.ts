@@ -64,7 +64,6 @@ export class GuesserMethod implements PasswordFuzzerMethod {
         for (const element of elements) {
             if (element.length <= 1) continue;
             const results = fuzzKeyboardSquenz(element);
-            if (results.length) console.log(this.pw.password, results);
             const idx = this.pw.password.indexOf(element);
             for (const res of results) {
                 this.results.push(
@@ -73,7 +72,6 @@ export class GuesserMethod implements PasswordFuzzerMethod {
                         this.pw.password.slice(idx + element.length),
                 );
             }
-            if (results.length) console.log("DONE GUESSER");
         }
     }
 

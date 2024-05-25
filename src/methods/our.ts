@@ -1,9 +1,19 @@
 import { shuffle } from "@/lib/array";
-import { MAX_PASWORDS_PER_METHOD, QWERTY_KEYBOARD, QWERTZ_KEYBOARD } from "@/lib/config";
+import { QWERTY_KEYBOARD, QWERTZ_KEYBOARD } from "@/lib/config";
 import { findKeyboardSequenzes, fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
 import { getLeetedChars, isLeetalble } from "@/lib/leet";
 import { isNumberStr, isSymbolStr, isUpperCase } from "@/lib/password";
-import { isLetterOnly, removeCharAt } from "@/lib/string";
+import {
+    countUpnDown,
+    expandNumberSequence,
+    isLetterOnly,
+    isNumberSequence,
+    onlyFirstCharUpper,
+    removeCharAt,
+    upperFirst,
+    upperFirstAndLast,
+    upperLast,
+} from "@/lib/string";
 import { Password } from "@/password";
 import { PasswordFuzzerMethod } from "@/types/fuzzer";
 
@@ -24,6 +34,9 @@ export class OurMethod implements PasswordFuzzerMethod {
         this.casing();
         this.reverse();
         this.leet();
+        this.postfixes();
+        this.numbers();
+        this.capAndNumber();
         this.moveSubString();
         return Array.from(new Set(this.results));
     }
@@ -40,15 +53,71 @@ export class OurMethod implements PasswordFuzzerMethod {
         if (this.results.includes(pw)) return "reverse";
         this.leet();
         if (this.results.includes(pw)) return "leet";
+        this.postfixes();
+        if (this.results.includes(pw)) return "postfixes";
+        this.capAndNumber();
+        if (this.results.includes(pw)) return "capAndNumber";
+        this.numbers();
+        if (this.results.includes(pw)) {
+            // console.log(pw, this.pw.password);
+            return "numbers";
+        }
         this.moveSubString();
         if (this.results.includes(pw)) return "moveSubString";
         else return "unknown"; // either moveSubString or unknown, because moveSubString is random
     }
-
+    private capAndNumber() {
+        const elements = this.pw.getElements();
+        const alphabetics = elements.filter(isLetterOnly);
+        const numbers = elements.filter(isNumberStr);
+        if (alphabetics.length > 2 || numbers.length > 2) return;
+        const alphaStr = alphabetics[0];
+        const numStr = numbers[0];
+        if (!alphaStr || !numStr) return;
+        const alphaIndex = elements.indexOf(alphaStr);
+        const numIndex = elements.indexOf(numStr);
+        const numberAlternatives = [...expandNumberSequence(numStr, 2), ...countUpnDown(numStr)];
+        for (const number of numberAlternatives) {
+            this.results.push(
+                elements
+                    .with(numIndex, number)
+                    .with(alphaIndex, onlyFirstCharUpper(alphaStr))
+                    .join(""),
+            );
+        }
+    }
+    private postfixes() {
+        if (!this.pw.isAlphabeticOnly()) return;
+        for (const postfix of POP_NUMBER_POSTFIXES_TDT) {
+            this.results.push(this.pw.password + postfix);
+        }
+    }
+    private numbers() {
+        const elements = this.pw.getElements();
+        // if (elements.length > 1) return;
+        let i = -1;
+        for (const element of elements) {
+            i++;
+            if (!isNumberStr(element)) continue;
+            const alternatives: Array<string> = [];
+            if (isNumberSequence(element)) {
+                alternatives.push(...expandNumberSequence(element, 2));
+                const chars = element.split("");
+                while (chars.length > element.length - 3) {
+                    if (chars.length === 0) break;
+                    chars.pop();
+                    alternatives.push(chars.join(""));
+                }
+            }
+            alternatives.push(...countUpnDown(element));
+            for (const alt of alternatives) {
+                this.results.push(elements.with(i, alt).join(""));
+            }
+        }
+    }
     private keyboardSquenzes() {
         for (const keyboard of [QWERTZ_KEYBOARD, QWERTY_KEYBOARD]) {
             const sequenzes = findKeyboardSequenzes(this.pw.password, keyboard);
-            if (sequenzes.length) console.log(this.pw.password, sequenzes);
             for (const seq of sequenzes) {
                 if (seq.length <= 1) continue;
                 const results = fuzzKeyboardSquenz(seq, keyboard);
@@ -61,7 +130,6 @@ export class OurMethod implements PasswordFuzzerMethod {
                     );
                 }
             }
-            if (sequenzes.length) console.log("DONE OUR");
         }
     }
 
@@ -88,34 +156,41 @@ export class OurMethod implements PasswordFuzzerMethod {
 
         if (!this.pw.hasSpecialChar()) {
             for (const char of POP_SPEZIAL_CHARS) {
-                this.results.push(this.pw.password, char);
+                this.results.push(this.pw.password + char);
             }
         }
         if (!this.pw.hasNumbers()) {
-            for (const num of POP_NUMBER_CHARS) {
+            for (const num of POP_NUMBER_CHARS_GUESSER) {
                 this.results.push(this.pw.password + num);
             }
         }
         //Top 3 Bigrams and Trigrams
         const nGrams = ["01", "123"];
         for (const nGram of nGrams) {
-            this.results.push(...this.addToStartAndEnd(this.pw.password, nGram));
+            this.results.push(this.pw.password + nGram);
         }
     }
-    private addToStartAndEnd(base: string, toAdd: string | number) {
-        return [toAdd + base, base + toAdd];
-    }
+
     private casing() {
         const uppered = this.pw.password.toUpperCase();
-        const upperedFirst = this.pw.password.slice(0, 1).toUpperCase() + this.pw.password.slice(1);
-        const upperedLast =
-            this.pw.password.slice(0, -1) + this.pw.password.slice(-1).toUpperCase();
-        const upperFirstandLast =
-            this.pw.password.slice(0, 1).toUpperCase() +
-            this.pw.password.slice(1, -1) +
-            this.pw.password.slice(-1).toUpperCase();
-        const lower = this.pw.password.toLowerCase();
-        this.results.push(uppered, upperedFirst, upperedLast, upperFirstandLast, lower);
+        const lowered = this.pw.password.toLowerCase();
+        this.results.push(
+            uppered,
+            onlyFirstCharUpper(this.pw.password),
+            upperFirst(this.pw.password),
+            upperLast(this.pw.password),
+            upperFirstAndLast(this.pw.password),
+            lowered,
+        );
+
+        const elements = this.pw.getElements();
+        for (const element of elements) {
+            if (!isLetterOnly(element) || element.length < 2) continue;
+            const options = [upperFirst(element), upperLast(element), upperFirstAndLast(element)];
+            for (const option of options) {
+                this.results.push(elements.with(elements.indexOf(element), option).join(""));
+            }
+        }
     }
     private reverse() {
         this.results.push(this.pw.password.split("").reverse().join(""));
@@ -145,7 +220,8 @@ export class OurMethod implements PasswordFuzzerMethod {
     }
 }
 const POP_SPEZIAL_CHARS = ["!", "?", "@", ".", "*"];
-const POP_NUMBER_CHARS = ["0", "1", "2", "3", "8"];
+const POP_NUMBER_CHARS_GUESSER = ["0", "1", "2", "3", "8"];
+const POP_NUMBER_POSTFIXES_TDT = ["11", "12"];
 
 export const LEET_MAP: Record<string, Array<string>> = {
     o: ["0"],
