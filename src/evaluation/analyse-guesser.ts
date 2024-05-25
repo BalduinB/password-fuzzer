@@ -5,11 +5,12 @@ import { isNumberStr } from "@/lib/password";
 
 export async function calculateGuesserLeakedStats() {
     const guesserLeakedData = await passwordsOfMethodAndVersion({
-        method: "guesser",
+        method: "tdt",
         isLeaked: true,
-        type: "UNIQUE_TO_METHOD",
+        type: "ALL",
+        version: "BASE",
     });
-    console.log(`AMOUN: ${guesserLeakedData.length}`);
+    console.log(`AMOUNT: ${guesserLeakedData.length}`);
     const statsGuesser: Record<string, number> = {};
     const statsOur: Record<string, number> = {};
     const statsMethod: Record<string, number> = {};
@@ -19,22 +20,26 @@ export async function calculateGuesserLeakedStats() {
     // let end = 0;
     // let numbers = 0;
     // let spezials = 0;
-    for (const { pw, originalVersion } of guesserLeakedData) {
+    const testpws = ["bob-marley10"];
+    for (const { pw, originalVersion, pwType } of guesserLeakedData) {
         const guesser = new GuesserMethod(new Password(originalVersion));
         const our = new OurMethod(new Password(originalVersion));
         const guesserCreationMethod = guesser.fuzzingMethodOf(pw);
         const ourCreationMethod = our.fuzzingMethodOf(pw);
-        if (guesserCreationMethod === "unknown") {
-            // console.log("unknown", pw, originalVersion);
+        if (testpws.includes(originalVersion)) {
+            console.log(pw, originalVersion, guesserCreationMethod, ourCreationMethod);
         }
-        if (!statsGuesser[guesserCreationMethod]) {
-            statsGuesser[guesserCreationMethod] = 0;
+        if (ourCreationMethod === "unknown") {
+            // console.log(originalVersion + " -> " + pw + ": " + pw.replace(originalVersion, ""));
         }
-        if (!statsOur[ourCreationMethod]) {
-            statsOur[ourCreationMethod] = 0;
+        if (!statsGuesser[guesserCreationMethod + pwType]) {
+            statsGuesser[guesserCreationMethod + pwType] = 0;
         }
-        statsGuesser[guesserCreationMethod]++;
-        statsOur[ourCreationMethod]++;
+        if (!statsOur[ourCreationMethod + pwType]) {
+            statsOur[ourCreationMethod + pwType] = 0;
+        }
+        statsGuesser[guesserCreationMethod + pwType]++;
+        statsOur[ourCreationMethod + pwType]++;
         // if (creationMethod === "insert") {
         //     onIsInsert(statsInsert, pw, originalVersion);
         // }
