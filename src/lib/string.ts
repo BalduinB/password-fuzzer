@@ -39,11 +39,14 @@ export function countUp(str: string, iterations = 2) {
     }
     return results;
 }
-export function isOnlyFirstCharUpper(str: string) {
-    const [first, ...rest] = str;
-    const restStr = rest.join("");
-    if (!first) return false;
-    return first === first.toUpperCase() && restStr === restStr.toLowerCase();
+export function countUpnDown(str: string, iterations = 2) {
+    const number = +str;
+    const results: Array<string> = [];
+    for (let i = 1; i <= iterations; i++) {
+        results.push((number + i).toString());
+        results.push((number - i).toString());
+    }
+    return results;
 }
 
 export function onlyFirstCharUpper(str: string) {
@@ -59,10 +62,13 @@ export function onlyLastCharUpper(str: string) {
 }
 
 export function upperFirst(str: string) {
-    const [first, ...rest] = str;
-    const restStr = rest.join("");
-    if (!first) return false;
-    return first.toUpperCase() + restStr.toLowerCase();
+    return str.slice(0, 1).toUpperCase() + str.slice(1);
+}
+export function upperFirstAndLast(str: string) {
+    return str.slice(0, 1).toUpperCase() + str.slice(1, -1) + str.slice(-1).toUpperCase();
+}
+export function upperLast(str: string) {
+    return str.slice(0, -1) + str.slice(-1).toUpperCase();
 }
 
 export function removeCharAt(str: string, index: number) {

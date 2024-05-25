@@ -1,6 +1,12 @@
 import { describe, expect, test } from "vitest";
 
-import { expandNumberSequence, isNumberSequence } from "@/lib/string";
+import {
+    expandNumberSequence,
+    isNumberSequence,
+    upperFirst,
+    upperFirstAndLast,
+    upperLast,
+} from "@/lib/string";
 import { calculateElementsWithAlpha } from "@/lib/password";
 
 describe("lib/string", () => {
@@ -23,5 +29,11 @@ describe("lib/string", () => {
             "12",
         ]);
         expect(calculateElementsWithAlpha("michiiii")).toStrictEqual(["michiiii"]);
+    });
+    test("casing", () => {
+        const testString = "passWort12asd";
+        expect(upperFirst(testString)).toEqual("PassWort12asd");
+        expect(upperLast(testString)).toEqual("passWort12asD");
+        expect(upperFirstAndLast(testString)).toEqual("PassWort12asD");
     });
 });
