@@ -12,7 +12,7 @@ config({
 export let FAILED_CREADENTIALS_CHECK = 0; //12_070;
 export let TIMEDOUT_CREADENTIALS_CHECK = 0; //62;
 const BATCH_SIZE = 10;
-const TIMEOUT_AFTER_BATCH = 500;
+const TIMEOUT_AFTER_BATCH = 550;
 
 async function hasMatches(email: string, password: string) {
     assert(process.env.API_KEY, "env.API_KEY is required");

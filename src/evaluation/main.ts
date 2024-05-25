@@ -6,7 +6,7 @@ import {
     getOpenBaseDataFromDB,
 } from "./db/analysed-data";
 import { fuzzPassword } from "./generate-passwords";
-import { SAMPLE_SIZE, getDummyFromDB, getRandomPairsFromFS } from "./sample-set";
+import { SAMPLE_SIZE, getRandomPairsFromFS } from "./sample-set";
 import {
     addStats,
     calculateStatistics,
@@ -17,18 +17,22 @@ import {
 } from "./stats";
 
 export async function main() {
-    if (!(await isNewVersion())) throw new Error("Version already exists");
-
+    // if (!(await isNewVersion())) throw new Error("Version already exists");
+    let round = 0;
     while (globalBaseStats.totalPasswords < SAMPLE_SIZE) {
         try {
-            const dataWithDbId = await getBaseSet();
-
+            round++;
+            console.log(new Date().toLocaleString("de-DE"));
+            let dataWithDbId;
+            if (round === 1) {
+                dataWithDbId = await retrievFromDB();
+            } else dataWithDbId = await getBaseSet();
             let i = 0;
             for (const { email, password, databaseId: originalVersionId } of dataWithDbId) {
                 i++;
                 try {
                     console.log(
-                        `Checking: ${email} ${password} DB:${originalVersionId} ${i}/${dataWithDbId.length}`,
+                        `Checking: ${email} ${password} DB:${originalVersionId} ${i}/${dataWithDbId.length} - ${new Date().toLocaleString("de-DE")}`,
                     );
                     const fuzzedPasswords = fuzzPassword(password);
                     logGlobalStats();
@@ -77,6 +81,7 @@ async function getBaseSet() {
     globalBaseStats.leakedPasswords += dataWithLeakHit.filter((p) => p.isLeaked).length;
 
     logGlobalStats();
+    console.log(new Date().toLocaleString("de-DE"));
     console.time("insertIntoAnalysedDataBase");
     const dataWithDbId = await insertBaseDataIntoAnalysedData(dataWithLeakHit, "base");
     console.timeEnd("insertIntoAnalysedDataBase");

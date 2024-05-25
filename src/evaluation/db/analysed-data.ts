@@ -1,10 +1,10 @@
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, notExists } from "drizzle-orm";
 import { batchedGetLeakData } from "../c3";
 import { db } from "./client";
 import { analysedData, analysedDataTest } from "./schema";
 import { globalBaseStats } from "../stats";
 
-export const CURRENT_VERSION = "BASE";
+export const CURRENT_VERSION = "V1";
 export async function insertBaseDataIntoAnalysedData(
     data: Awaited<ReturnType<typeof batchedGetLeakData> & { originalVersionId?: number }>,
     pwType: string,
@@ -24,7 +24,7 @@ export async function insertBaseDataIntoAnalysedData(
         );
     }
 
-    return await retrieveIds(pwType);
+    return await retrieveWithIds(pwType);
 }
 
 export async function alreadyExists(email: string, password: string) {
@@ -39,16 +39,19 @@ export async function alreadyExists(email: string, password: string) {
     return !res;
 }
 
-async function retrieveIds(pwType: string) {
-    return await db
-        .select({
-            email: analysedData.email,
-            password: analysedData.pw,
-            isLeaked: analysedData.hit,
-            databaseId: analysedData.id,
-        })
-        .from(analysedData)
-        .where(and(eq(analysedData.pwType, pwType), eq(analysedData.version, CURRENT_VERSION)));
+export async function retrieveWithIds(pwType: string) {
+    const data = await db.query.analysedData.findMany({
+        where: and(eq(analysedData.pwType, pwType), eq(analysedData.version, CURRENT_VERSION)),
+        with: { fuzzedPasswords: { limit: 1 } },
+    });
+    return data
+        .filter((d) => !d.fuzzedPasswords.length)
+        .map((data) => ({
+            email: data.email,
+            password: data.pw,
+            isLeaked: data.hit,
+            databaseId: data.id,
+        }));
 }
 
 export async function insertIntoAnalysedData(
@@ -93,25 +96,24 @@ export async function getOpenBaseDataFromDB() {
             isLeaked: data.hit,
             databaseId: data.id,
         }));
-    globalBaseStats.totalPasswords = 30000;
+    globalBaseStats.totalPasswords = data.length;
     globalBaseStats.leakedPasswords = data.filter((p, i) => i < 30000 && p.hit).length;
-    const alreadyFuzzedBasePasswords = data.length - notFuzzedBasePasswords.length;
-    return notFuzzedBasePasswords.slice(0, 30000 - alreadyFuzzedBasePasswords);
+    return notFuzzedBasePasswords;
 }
-export async function getBaseDataFromDB() {
+export async function getBaseDataFromDB(version = CURRENT_VERSION) {
     return await db.query.analysedData.findMany({
-        where: and(eq(analysedData.pwType, "base"), eq(analysedData.version, CURRENT_VERSION)),
+        where: and(eq(analysedData.pwType, "base"), eq(analysedData.version, version)),
+        with: { fuzzedPasswords: { limit: 1 } },
     });
 }
 
 export async function passwordsOfMethodAndVersion(args: {
-    method: string;
+    method: "not_base" | string;
     isLeaked?: boolean;
     version?: string;
-    basePassword?: string;
     type?: "ALL" | "UNIQUE_TO_METHOD";
 }) {
-    const { method, isLeaked, basePassword, version = CURRENT_VERSION, type = "ALL" } = args;
+    const { method, isLeaked, version = CURRENT_VERSION, type = "ALL" } = args;
     const data = await db
         .select({
             pw: analysedData.pw,
@@ -124,9 +126,10 @@ export async function passwordsOfMethodAndVersion(args: {
         .where(
             and(
                 eq(analysedData.version, version),
-                eq(analysedData.pwType, method),
+                method === "not_base"
+                    ? ne(analysedData.pwType, "base")
+                    : eq(analysedData.pwType, method),
                 isLeaked !== undefined ? eq(analysedData.hit, isLeaked) : undefined,
-                basePassword ? eq(subQuery.pw, basePassword) : undefined,
             ),
         );
 
