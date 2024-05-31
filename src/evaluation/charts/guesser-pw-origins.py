@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as pl
+import matplotlib.pyplot as plt
 
 data = {
     'Kategorie':  [ "Löschen" , "Großschreibung" , "Einfügen" , "Umkehren" , "Tastatur-Sequenzen" , "Sortierung" , "Leetspeak"  ],
@@ -9,13 +9,13 @@ data = {
 }
 df = pd.DataFrame(data)
 
-fig, (ax, ax2) = plt.subplots(2,1, figsize=(12, 6))
+fig, (ax, ax2) = plt.subplots(2,1, figsize=(10, 6))
 
 bar_width = 0.35
 index = np.arange(len(df['Kategorie']))
 
 bars1 = ax.barh(df["Kategorie"], df['leaked'], bar_width, label='kompromittiert', color='#1f77b4')
-ax.set_xlabel("kompromittierte Passwörter",color='blue')
+ax.set_xlabel("kompromittierte Passwörter",color='#1f77b4')
 
 bars2 = ax2.barh(df["Kategorie"], df['notLeaked'], bar_width, label='nicht kompromittiert', color='darkorange')
 ax2.set_xlabel("nicht kompromittierte Passwörter",color='darkorange')

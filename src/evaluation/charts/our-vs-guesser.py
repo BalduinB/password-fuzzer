@@ -13,7 +13,7 @@ data = {
 
 df = pd.DataFrame(data)
 
-fig, ax = plt.subplots(figsize=(12, 6))
+fig, ax = plt.subplots(figsize=(10, 6))
 
 bar_width = 0.35
 index = np.arange(len(df['Kategorie']))
@@ -26,5 +26,7 @@ plt.ylabel('Änderung in %')
 plt.xticks(index + bar_width / 2, df['Kategorie'])
 plt.axhline(0, color='black', linewidth=0.8)
 plt.legend()
+plt.tight_layout()
+
 plt.savefig("pics/our-vs-guesser.png")
 # plt.show()

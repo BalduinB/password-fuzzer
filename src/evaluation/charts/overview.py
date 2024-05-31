@@ -17,7 +17,7 @@ bar_width = 0.35
 index = np.arange(len(df['Kategorie']))
 
 bars1 = ax.barh(df["Kategorie"], df['leaked'], bar_width, label='kompromittiert', color='#1f77b4')
-ax.set_xlabel("kompromittierte Passwörter",color='blue')
+ax.set_xlabel("kompromittierte Passwörter",color='#1f77b4')
 
 bars2 = ax2.barh(df["Kategorie"], df['notLeaked'], bar_width, label='nicht kompromittiert', color='darkorange')
 
