@@ -44,7 +44,7 @@ export function countUpnDown(str: string, iterations = 2) {
     const results: Array<string> = [];
     for (let i = 1; i <= iterations; i++) {
         results.push((number + i).toString());
-        results.push((number - i).toString());
+        if (number - i > -1) results.push((number - i).toString());
     }
     return results;
 }
@@ -61,14 +61,23 @@ export function onlyLastCharUpper(str: string) {
     return onlyFirstCharUpper(str.split("").reverse().join("")).split("").reverse().join("");
 }
 
+export function onlyUpperFirstAndLast(str: string) {
+    if (str.length === 1) return str.toUpperCase();
+    return (
+        str.slice(0, 1).toUpperCase() + str.slice(1, -1).toLowerCase() + str.slice(-1).toUpperCase()
+    );
+}
+
 export function upperFirst(str: string) {
     return str.slice(0, 1).toUpperCase() + str.slice(1);
 }
-export function upperFirstAndLast(str: string) {
-    return str.slice(0, 1).toUpperCase() + str.slice(1, -1) + str.slice(-1).toUpperCase();
-}
 export function upperLast(str: string) {
+    if (str.length === 1) return str.toUpperCase();
     return str.slice(0, -1) + str.slice(-1).toUpperCase();
+}
+export function upperFirstAndLast(str: string) {
+    if (str.length === 1) return str.toUpperCase();
+    return str.slice(0, 1).toUpperCase() + str.slice(1, -1) + str.slice(-1).toUpperCase();
 }
 
 export function removeCharAt(str: string, index: number) {

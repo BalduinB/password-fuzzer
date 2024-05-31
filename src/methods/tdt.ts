@@ -133,6 +133,6 @@ export class TDTMethod implements PasswordFuzzerMethod {
     }
 }
 
-const POPULAR_NUMBER_PARTS = ["1", "12", "13", "11", "22", "23", "07"];
+const POPULAR_NUMBER_PARTS = ["1", "11", "12", "13", "22", "23", "07"];
 // Based on the most common special characters (Table 8)
 const POPULAR_SINGLE_SPEZIAL_PARTS = ["!", ".", "*", "@"];

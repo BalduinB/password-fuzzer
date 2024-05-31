@@ -12,7 +12,7 @@ export function isNumberChar(char: string) {
     return numbers.includes(char);
 }
 export function isNumberStr(str: string) {
-    return !isNaN(Number(str));
+    return !isNaN(parseInt(str));
 }
 
 export function isSymbolChar(char: string) {

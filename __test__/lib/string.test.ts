@@ -35,5 +35,9 @@ describe("lib/string", () => {
         expect(upperFirst(testString)).toEqual("PassWort12asd");
         expect(upperLast(testString)).toEqual("passWort12asD");
         expect(upperFirstAndLast(testString)).toEqual("PassWort12asD");
+        const testString2 = "3 ";
+        expect(upperFirst(testString2)).toEqual(testString2);
+        expect(upperLast(testString2)).toEqual(testString2);
+        expect(upperFirstAndLast(testString2)).toEqual(testString2);
     });
 });
