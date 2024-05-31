@@ -2,7 +2,7 @@ node_modules
 dist
 src/evaluation/playground
 src/evaluation/cli-client
-src/evaluation/charts
+src/evaluation/charts/pics
 .env
 .DS_Store
 **/.DS_Store
