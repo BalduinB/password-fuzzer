@@ -1,10 +1,11 @@
-import { and, eq, ne, notExists } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { batchedGetLeakData } from "../c3";
 import { db } from "./client";
-import { analysedData, analysedDataTest } from "./schema";
+import { analysedData } from "./schema";
 import { globalBaseStats } from "../stats";
+import { Method, Version } from "../types";
 
-export const CURRENT_VERSION = "V1";
+export const CURRENT_VERSION = "V2";
 export async function insertBaseDataIntoAnalysedData(
     data: Awaited<ReturnType<typeof batchedGetLeakData> & { originalVersionId?: number }>,
     pwType: string,
@@ -42,7 +43,7 @@ export async function alreadyExists(email: string, password: string) {
 export async function retrieveWithIds(pwType: string) {
     const data = await db.query.analysedData.findMany({
         where: and(eq(analysedData.pwType, pwType), eq(analysedData.version, CURRENT_VERSION)),
-        with: { fuzzedPasswords: { limit: 1 } },
+        with: { fuzzedPasswords: { limit: 1, where: ne(analysedData.pwType, "REMOVED") } },
     });
     return data
         .filter((d) => !d.fuzzedPasswords.length)
@@ -100,17 +101,26 @@ export async function getOpenBaseDataFromDB() {
     globalBaseStats.leakedPasswords = data.filter((p, i) => i < 30000 && p.hit).length;
     return notFuzzedBasePasswords;
 }
-export async function getBaseDataFromDB(version = CURRENT_VERSION) {
+
+export async function getBaseDataFromDB(
+    version: Version = CURRENT_VERSION,
+    fuzzed?: "ONE" | "ALL",
+) {
     return await db.query.analysedData.findMany({
-        where: and(eq(analysedData.pwType, "base"), eq(analysedData.version, version)),
-        with: { fuzzedPasswords: { limit: 1 } },
+        where: and(eq(analysedData.pwType, "base"), eq(analysedData.version, version as string)),
+        with: {
+            fuzzedPasswords: {
+                where: ne(analysedData.pwType, "REMOVED"),
+                limit: fuzzed === "ALL" ? undefined : 1,
+            },
+        },
     });
 }
 
 export async function passwordsOfMethodAndVersion(args: {
-    method: "not_base" | string;
+    method: Method;
     isLeaked?: boolean;
-    version?: string;
+    version?: Version;
     type?: "ALL" | "UNIQUE_TO_METHOD";
 }) {
     const { method, isLeaked, version = CURRENT_VERSION, type = "ALL" } = args;
@@ -125,10 +135,10 @@ export async function passwordsOfMethodAndVersion(args: {
         .innerJoin(subQuery, eq(subQuery.id, analysedData.originalVersionId))
         .where(
             and(
-                eq(analysedData.version, version),
+                eq(analysedData.version, version as string),
                 method === "not_base"
                     ? ne(analysedData.pwType, "base")
-                    : eq(analysedData.pwType, method),
+                    : eq(analysedData.pwType, method as string),
                 isLeaked !== undefined ? eq(analysedData.hit, isLeaked) : undefined,
             ),
         );
@@ -147,12 +157,12 @@ export async function passwordsOfMethodAndVersion(args: {
 
 async function isUniquePw(
     item: { pw: string; originalVersionId: number; pwType: string },
-    version: string,
+    version: Version,
 ) {
     return !(await db.query.analysedData.findFirst({
         where: and(
             eq(analysedData.pw, item.pw),
-            eq(analysedData.version, version),
+            eq(analysedData.version, version as string),
             eq(analysedData.originalVersionId, item.originalVersionId),
             ne(analysedData.pwType, item.pwType),
         ),
