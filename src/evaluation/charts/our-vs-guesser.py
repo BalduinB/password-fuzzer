@@ -23,9 +23,8 @@ bars2 = plt.bar(index, df['notLeaked'], bar_width, label='nicht kompromittiert')
 
 
 plt.ylabel('Änderung in %')
-plt.title('Gruppiertes Balkendiagramm mit negativen Werten')
 plt.xticks(index + bar_width / 2, df['Kategorie'])
 plt.axhline(0, color='black', linewidth=0.8)
 plt.legend()
-
-plt.show()
+plt.savefig("pics/our-vs-guesser.png")
+# plt.show()
