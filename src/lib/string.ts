@@ -2,7 +2,16 @@ export function isNumberSequence(str: string) {
     return str
         .split("")
         .map((n) => parseInt(n))
-        .every((num, idx, arr) => idx === 0 || num - 1 === arr[idx - 1]);
+        .every((num, idx, arr) => idx === 0 || num - 1 === arr[idx - 1]); // TODO:   (str.startsWith("1") || str.startsWith("0"))
+}
+export function isNumberSequenceNew(str: string) {
+    return (
+        str
+            .split("")
+            .map((n) => parseInt(n))
+            .every((num, idx, arr) => idx === 0 || num - 1 === arr[idx - 1]) &&
+        (str.startsWith("1") || str.startsWith("0"))
+    );
 }
 export function expandNumberSequence(str: string, iterations = 3) {
     const numbersOfstr = str.split("").map((n) => parseInt(n));

@@ -23,10 +23,7 @@ export async function main() {
         try {
             round++;
             console.log(new Date().toLocaleString("de-DE"));
-            let dataWithDbId;
-            if (round === 1) {
-                dataWithDbId = await retrievFromDB();
-            } else dataWithDbId = await getBaseSet();
+            const dataWithDbId = await getBaseSet();
             let i = 0;
             for (const { email, password, databaseId: originalVersionId } of dataWithDbId) {
                 i++;

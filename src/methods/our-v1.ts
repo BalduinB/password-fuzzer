@@ -2,12 +2,12 @@ import { shuffle } from "@/lib/array";
 import { QWERTY_KEYBOARD, QWERTZ_KEYBOARD } from "@/lib/config";
 import { findKeyboardSequenzes, fuzzKeyboardSquenz } from "@/lib/keyboad-sequenz";
 import { getLeetedChars, isLeetalble } from "@/lib/leet";
-import { calculateElementsWithAlpha, isNumberStr, isSymbolStr, isUpperCase } from "@/lib/password";
+import { calculateElements, isNumberStr, isSymbolStr, isUpperCase } from "@/lib/password";
 import {
     countUpnDown,
     expandNumberSequence,
     isLetterOnly,
-    isNumberSequenceNew as isNumberSequence,
+    isNumberSequence,
     onlyFirstCharUpper,
     onlyLastCharUpper,
     onlyUpperFirstAndLast,
@@ -36,10 +36,11 @@ export class OurMethod implements PasswordFuzzerMethod {
         this.casing();
         this.reverse();
         this.leet();
+        this.postfixes();
         this.numbers();
         this.capAndNumber();
         this.moveSubString();
-        return Array.from(new Set(this.results)).slice(0, undefined);
+        return Array.from(new Set(this.results));
     }
     fuzzingMethodOf(pw: string) {
         this.keyboardSquenzes();
@@ -60,6 +61,9 @@ export class OurMethod implements PasswordFuzzerMethod {
         this.leet();
         if (this.results.includes(pw)) return "leet";
 
+        this.postfixes();
+        if (this.results.includes(pw)) return "postfixes";
+
         this.numbers();
         if (this.results.includes(pw)) return "numbers";
 
@@ -73,9 +77,9 @@ export class OurMethod implements PasswordFuzzerMethod {
     private capAndNumber() {
         // From TDT
         const newPassword = onlyFirstCharUpper(this.pw.password);
-        const elements = calculateElementsWithAlpha(newPassword); // TODO: WithAlphaString
+        const elements = calculateElements(newPassword); // TODO: WithAlphaString
         const numbers = elements.filter(isNumberStr);
-        if (elements.length > 2) return; // TODO: elements.length > 2
+        if (numbers.length > 2) return; // TODO: elements.length > 2
         for (const numStr of numbers) {
             const numberAlternatives = [...countUpnDown(numStr)];
             if (isNumberSequence(numStr)) {
@@ -92,7 +96,13 @@ export class OurMethod implements PasswordFuzzerMethod {
             }
         }
     }
-
+    private postfixes() {
+        // From TDT
+        if (!this.pw.isAlphabeticOnly()) return;
+        for (const postfix of POP_NUMBER_POSTFIXES_TDT) {
+            this.results.push(this.pw.password + postfix);
+        }
+    }
     private numbers() {
         // From TDT
         const elements = this.pw.getElements();
@@ -156,7 +166,19 @@ export class OurMethod implements PasswordFuzzerMethod {
     private insert() {
         if (this.pw.tooLong()) return;
 
-        for (const nGram of POP_POSTFIXES) {
+        if (!this.pw.hasSpecialChar()) {
+            for (const char of POP_SPEZIAL_CHARS) {
+                this.results.push(this.pw.password + char);
+            }
+        }
+        if (!this.pw.hasNumbers()) {
+            for (const num of POP_NUMBER_CHARS_GUESSER) {
+                this.results.push(this.pw.password + num);
+            }
+        }
+        //Top 2 Bigrams and Trigrams
+        const nGrams = ["01", "123"];
+        for (const nGram of nGrams) {
             this.results.push(this.pw.password + nGram);
         }
     }
@@ -168,13 +190,25 @@ export class OurMethod implements PasswordFuzzerMethod {
         this.results.push(
             uppered,
             onlyFirstCharUpper(this.pw.password),
-            onlyLastCharUpper(this.pw.password),
-            onlyUpperFirstAndLast(this.pw.password),
             upperFirst(this.pw.password),
             upperLast(this.pw.password),
             upperFirstAndLast(this.pw.password),
             lowered,
         );
+
+        // From TDT TODO: löschen
+        const elements = this.pw.getElementsWithAlphaString();
+        for (const element of elements) {
+            if (!isLetterOnly(element) || element.length < 2) continue;
+            const options = [
+                onlyFirstCharUpper(element),
+                onlyLastCharUpper(element),
+                onlyUpperFirstAndLast(element),
+            ];
+            for (const option of options) {
+                this.results.push(elements.with(elements.indexOf(element), option).join(""));
+            }
+        }
     }
     private reverse() {
         this.results.push(this.pw.password.split("").reverse().join(""));
@@ -205,8 +239,9 @@ export class OurMethod implements PasswordFuzzerMethod {
         }
     }
 }
-
-const POP_POSTFIXES = ["0", "1", "2", "01", "11", "12", "123", "!"];
+const POP_SPEZIAL_CHARS = ["!", "?", "@", ".", "*"];
+const POP_NUMBER_CHARS_GUESSER = ["0", "1", "2", "3", "8"];
+const POP_NUMBER_POSTFIXES_TDT = ["1", "11", "12"];
 
 export const LEET_MAP: Record<string, Array<string>> = {
     o: ["0"],
