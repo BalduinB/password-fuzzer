@@ -1,3 +1,4 @@
+import { numberOfFindingsByPwType } from "./account-data-with-findings";
 import {
     calculateGuesserLeakedStats as baseLeaked,
     calculateGuesserNotLeakedStats as baseNotLeaked,
@@ -16,6 +17,10 @@ import { main } from "./main";
 // baseNotLeaked();
 // v1Leaked();
 // v1NotLeaked();
-v2Leaked();
-v2NotLeaked();
+// v2Leaked();
+// v2NotLeaked();
 // await main();
+
+numberOfFindingsByPwType();
+
+export {};
