@@ -102,15 +102,15 @@ export async function getOpenBaseDataFromDB() {
     return notFuzzedBasePasswords;
 }
 
-export async function getBaseDataFromDB(
-    version: Version = CURRENT_VERSION,
-    fuzzed?: "ONE" | "ALL",
-) {
+export async function getBaseDataFromDB(version?: Version, fuzzed?: "ONE" | "ALL") {
     return await db.query.analysedData.findMany({
-        where: and(eq(analysedData.pwType, "base"), eq(analysedData.version, version as string)),
+        where: and(
+            eq(analysedData.pwType, "base"),
+            version ? eq(analysedData.version, version as string) : undefined,
+        ),
         with: {
             fuzzedPasswords: {
-                where: ne(analysedData.pwType, "REMOVED"),
+                // where: ne(analysedData.pwType, "REMOVED"),
                 limit: fuzzed === "ALL" ? undefined : 1,
             },
         },
