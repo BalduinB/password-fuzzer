@@ -14,18 +14,20 @@ data = {
 df = pd.DataFrame(data)
 
 fig, ax = plt.subplots(figsize=(10, 6))
+ax.tick_params(axis='y', labelsize=14)
+ax.tick_params(axis='x', labelsize=13)
 
 bar_width = 0.35
 index = np.arange(len(df['Kategorie']))
 
-bars1 = plt.bar(index + bar_width, df['leaked'], bar_width, label='kompromittiert')
-bars2 = plt.bar(index, df['notLeaked'], bar_width, label='nicht kompromittiert')
+bars1 = plt.barh(index + bar_width, df['leaked'], bar_width, label='kompromittiert')
+bars2 = plt.barh(index, df['notLeaked'], bar_width, label='nicht kompromittiert')
 
 
-plt.ylabel('Änderung in %')
-plt.xticks(index + bar_width / 2, df['Kategorie'])
-plt.axhline(0, color='black', linewidth=0.8)
-plt.legend()
+plt.xlabel('Änderung in %', fontsize=16)
+plt.yticks(index + bar_width / 2, df['Kategorie'])
+plt.axvline(0, color='black', linewidth=0.8)
+plt.legend(fontsize=14)
 plt.tight_layout()
 
 plt.savefig("pics/our-vs-guesser.png")
