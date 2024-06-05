@@ -7,7 +7,7 @@ data = {
     'TDT'        :  [ 1621,0],
     'Guesser'    :  [ 2227 ,0],
     'Guesser+TDT':  [ 2828 ,0],
-    'Our'        :  [ 3025, 3073,],
+    'Our'        :  [ 3025, 3073],
 }
 df = pd.DataFrame(data)
 fig, ax = plt.subplots(figsize=(10, 6))

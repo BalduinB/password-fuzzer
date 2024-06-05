@@ -12,10 +12,10 @@ df = pd.DataFrame(data)
 
 pd.options.display.float_format = '{:.2f}'.format
 fig, (ax, ax2) = plt.subplots(2,1, figsize=(12, 6))
-ax.tick_params(axis='y', labelsize=14)
-ax.tick_params(axis='x', labelsize=13)
-ax2.tick_params(axis='y', labelsize=14)
-ax2.tick_params(axis='x', labelsize=13)
+ax.tick_params(axis='y', labelsize=16)
+ax.tick_params(axis='x', labelsize=14)
+ax2.tick_params(axis='y', labelsize=16)
+ax2.tick_params(axis='x', labelsize=14)
 
 bar_width = 0.35
 index = np.arange(len(df['Kategorie']))
