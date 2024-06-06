@@ -30,6 +30,6 @@ plt.axvline(0, color='black', linewidth=0.8)
 plt.legend(fontsize=14)
 plt.tight_layout()
 
-plt.savefig("pics/tmp.png")
-# plt.savefig("pics/our-vs-our-v2.png")
+# plt.savefig("pics/tmp.png")
+plt.savefig("pics/our-vs-our-v2.png")
 # plt.show()
