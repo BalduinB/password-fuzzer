@@ -12,28 +12,28 @@ WHERE
   ad.hit = 1
   AND ad.pw_type = "tdt"
   AND (
-    -- BINARY LOWER(adj.pw) = ad.pw
-    --   OR (
-    --     BINARY CONCAT(
-    --      UPPER(LEFT(adj.pw, 1)),
-    --      LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))
-    --  ) = ad.pw
-    --  AND UPPER(LEFT(adj.pw, 1)) RLIKE '^[A-Z]'
-    --  ) -- Nur erster Buchstabe groß
-    -- OR (
-    --   BINARY CONCAT(
-    --      LOWER(LEFT(adj.pw, LENGTH(adj.pw) - 1)),
-    --     UPPER(RIGHT(adj.pw, 1))
-    --   ) = ad.pw
-    --    AND UPPER(RIGHT(adj.pw, 1)) RLIKE '^[A-Z]'
-    --  ) -- Nur letzter Buchstabe groß
-    --  OR BINARY CONCAT(
-    --    UPPER(LEFT(adj.pw, 1)),
-    --    LOWER(SUBSTRING(adj.pw, 2, LENGTH(adj.pw) -2)),
-    --    UPPER(RIGHT(adj.pw, 1))
-    --   ) = ad.pw
-    --  AND UPPER(LEFT(adj.pw, 1)) RLIKE '^[A-Z]'
-    --  AND UPPER(RIGHT(adj.pw, 1)) RLIKE '^[A-Z]' -- nur erster & letzter buchstabe groß
+     BINARY LOWER(adj.pw) = ad.pw
+       OR (
+         BINARY CONCAT(
+          UPPER(LEFT(adj.pw, 1)),
+          LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))
+      ) = ad.pw
+      AND UPPER(LEFT(adj.pw, 1)) RLIKE '^[A-Z]'
+      ) -- Nur erster Buchstabe groß
+     OR (
+       BINARY CONCAT(
+          LOWER(LEFT(adj.pw, LENGTH(adj.pw) - 1)),
+         UPPER(RIGHT(adj.pw, 1))
+       ) = ad.pw
+        AND UPPER(RIGHT(adj.pw, 1)) RLIKE '^[A-Z]'
+      ) -- Nur letzter Buchstabe groß
+      OR BINARY CONCAT(
+        UPPER(LEFT(adj.pw, 1)),
+        LOWER(SUBSTRING(adj.pw, 2, LENGTH(adj.pw) -2)),
+        UPPER(RIGHT(adj.pw, 1))
+       ) = ad.pw
+      AND UPPER(LEFT(adj.pw, 1)) RLIKE '^[A-Z]'
+      AND UPPER(RIGHT(adj.pw, 1)) RLIKE '^[A-Z]' -- nur erster & letzter buchstabe groß
     (
       BINARY CONCAT(adj.pw, "1") = ad.pw
       AND RIGHT(adj.pw, 1) <> "0"
@@ -70,19 +70,19 @@ WHERE
       )
       AND BINARY UPPER(adj.pw) <> adj.pw
     )
-    --   OR (
-    --  (
-    --  BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "1") = ad.pw
-    --    OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "11") = ad.pw
-    --     OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "12") = ad.pw
-    --     OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "23") = ad.pw
-    --     OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "!") = ad.pw
-    --     OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), ".") = ad.pw
-    --     OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "*") = ad.pw
-    --     OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "@") = ad.pw
-    --   )
-    --   AND BINARY CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))) <> adj.pw
-    -- )
+       OR (
+      (
+      BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "1") = ad.pw
+        OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "11") = ad.pw
+         OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "12") = ad.pw
+         OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "23") = ad.pw
+         OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "!") = ad.pw
+         OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), ".") = ad.pw
+         OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "*") = ad.pw
+         OR BINARY CONCAT(CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))), "@") = ad.pw
+       )
+       AND BINARY CONCAT(UPPER(LEFT(adj.pw,1)), LOWER(RIGHT(adj.pw, LENGTH(adj.pw) - 1))) <> adj.pw
+     )
   )
   AND NOT EXISTS (
     SELECT

@@ -6,21 +6,22 @@ data = {
     'Kategorie'  :  [ "Testdatensatz A" , "Testdatensatz B" ],
     'TDT'        :  [ 1621,0],
     'Guesser'    :  [ 2227 ,0],
-    'Guesser+TDT':  [ 2828 ,0],
+    # 'Guesser+TDT':  [ 2828 ,0],
     'Our'        :  [ 3025, 3073],
 }
 df = pd.DataFrame(data)
-fig, ax = plt.subplots(figsize=(10, 6))
+fig, ax = plt.subplots(figsize=(10, 5))
 ax.tick_params(axis='y', labelsize=14)
 
 bar_width = 0.15
 index = np.arange(len(df['Kategorie']))
+middle = index + bar_width / 2
 
 
-bars1 = plt.bar(index + 2*bar_width, df['TDT'], bar_width, label='TDT')
-bars3 = plt.bar(index + bar_width, df['Guesser'], bar_width, label='Guesser')
-bars1 = plt.bar(index , df['Guesser+TDT'], bar_width, label='TDT oder Guesser')
-bars4 = plt.bar(index - bar_width, df['Our'], bar_width, label='Unser Fuzzer')
+bars1 = plt.bar(middle + bar_width, df['TDT'], bar_width, label='TDT')
+bars3 = plt.bar(middle , df['Guesser'], bar_width, label='Guesser')
+# bars1 = plt.bar(middle , df['Guesser+TDT'], bar_width, label='TDT oder Guesser')
+bars4 = plt.bar(middle - bar_width, df['Our'], bar_width, label='Unser Fuzzer')
 
 
 plt.ylabel('Anzahl Anmeldedaten',fontsize=16)
