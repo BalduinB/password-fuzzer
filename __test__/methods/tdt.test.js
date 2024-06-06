@@ -1,17 +1,20 @@
 "use strict";
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
-};
+var __spreadArray =
+    (this && this.__spreadArray) ||
+    function (to, from, pack) {
+        if (pack || arguments.length === 2)
+            for (var i = 0, l = from.length, ar; i < l; i++) {
+                if (ar || !(i in from)) {
+                    if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+                    ar[i] = from[i];
+                }
+            }
+        return to.concat(ar || Array.prototype.slice.call(from));
+    };
 Object.defineProperty(exports, "__esModule", { value: true });
 var vitest_1 = require("vitest");
 var password_1 = require("@/password");
-var tdt_1 = require("@/methods/tdt");
+var tdt_1 = require("@/fuzzers/tdt");
 var testConfig = {
     password: "password1",
     alpaStrings: ["password"],
@@ -36,7 +39,11 @@ var fuzzer = new tdt_1.TDTMethod(new password_1.Password(testConfig2.password));
     });
     (0, vitest_1.test)("Fuzz", function () {
         var result = fuzzer.fuzz();
-        for (var _i = 0, _a = __spreadArray([testConfig2.password], testConfig2.fuzzed, true); _i < _a.length; _i++) {
+        for (
+            var _i = 0, _a = __spreadArray([testConfig2.password], testConfig2.fuzzed, true);
+            _i < _a.length;
+            _i++
+        ) {
             var res = _a[_i];
             (0, vitest_1.expect)(result).toContain(res);
         }

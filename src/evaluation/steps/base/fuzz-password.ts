@@ -1,6 +1,6 @@
 import { Fuzzer } from "@/fuzzer";
-import { GuesserMethod } from "@/methods/guesser";
-import { TDTMethod } from "@/methods/tdt";
+import { GuesserMethod } from "@/fuzzers/guesser";
+import { TDTMethod } from "@/fuzzers/tdt";
 import { Password } from "@/password";
 
 export function fuzzPassword(pw: string) {

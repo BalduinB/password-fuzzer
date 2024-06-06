@@ -1,8 +1,8 @@
+import { nGrams } from "@/fuzzers/guesser";
+import { OurMethod } from "@/fuzzers/our";
 import { enshureKey } from "@/lib/objects";
 import { calculateElements, isNumberStr } from "@/lib/password";
 import { onlyFirstCharUpper, upperFirst, upperFirstAndLast, upperLast } from "@/lib/string";
-import { nGrams } from "@/methods/guesser";
-import { OurMethod } from "@/methods/our";
 
 import { Password } from "..";
 import { passwordsOfMethodAndVersion } from "./db/analysed-data";

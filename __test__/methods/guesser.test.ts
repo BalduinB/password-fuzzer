@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
+import { GuesserMethod } from "@/fuzzers/guesser";
 import { Password } from "@/password";
-import { GuesserMethod } from "@/methods/guesser";
 
 const testConfig = {
     password: "password123",

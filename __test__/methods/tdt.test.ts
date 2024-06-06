@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
+import { TDTMethod } from "@/fuzzers/tdt";
 import { Password } from "@/password";
-import { TDTMethod } from "@/methods/tdt";
 
 const testConfig = {
     password: "password1",

@@ -1,4 +1,4 @@
-import { OurMethod } from "@/methods/our";
+import { OurMethod } from "@/fuzzers/our";
 import { Password } from "@/password";
 
 export function fuzzPassword(pw: string) {
