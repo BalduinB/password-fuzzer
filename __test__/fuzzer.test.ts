@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 
-import { Password } from "@/password";
 import { Fuzzer } from "@/fuzzer";
 import { TDTMethod } from "@/index";
+import { Password } from "@/password";
 
 const testConfig = {
     password: "Password123%",
@@ -19,6 +19,6 @@ describe("Password", () => {
     });
     test("Register", () => {
         fuzzer.register(new TDTMethod(new Password(testConfig.password)));
-        expect(fuzzer["methods"].length).eq(1);
+        expect(fuzzer["methods"].length).toEqual(1);
     });
 });

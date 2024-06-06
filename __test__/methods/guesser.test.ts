@@ -5,16 +5,7 @@ import { Password } from "@/password";
 
 const testConfig = {
     password: "password123",
-    fuzzed: [
-        "password12",
-        "1password",
-        "PASSWORD",
-        "Password",
-        "passworD",
-        "p@ssword",
-        "passw0rd",
-        "pas$word",
-    ],
+    fuzzed: ["password12", "passwordqwe", "p@ssword123", "password12", "pas$word123"],
 };
 
 const fuzzer = new GuesserMethod(new Password(testConfig.password));

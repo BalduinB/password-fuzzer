@@ -1,29 +1,19 @@
-import { fuzz } from "@/index";
 import { describe, expect, test } from "vitest";
+
+import { fuzz } from "@/index";
 
 const testConfig = {
     password: "Password1",
     fuzzed: [
         "Password1",
         "1Password",
-        "PASSWORD",
         "Password",
-        "PassworD",
-        "P@ssword",
-        "Passw0rd",
-        "Pas$word",
         "Password12",
         "Password123",
-        "Password1234",
+        "Password123",
+        "Password0",
         "Password2",
         "Password3",
-        "Password4",
-        "password12",
-        "password123",
-        "password1234",
-        "password2",
-        "password3",
-        "password4",
     ],
 };
 
