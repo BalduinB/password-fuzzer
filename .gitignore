@@ -3,6 +3,7 @@ dist
 src/evaluation/playground
 src/evaluation/cli-client
 src/evaluation/charts/pics
+src/evaluation/db/evaluation-data.sql
 .env
 .DS_Store
 **/.DS_Store
