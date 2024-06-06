@@ -1,9 +1,10 @@
 import { and, eq, ne } from "drizzle-orm";
+
 import { batchedGetLeakData } from "../c3";
-import { db } from "./client";
-import { analysedData } from "./schema";
 import { globalBaseStats } from "../stats";
 import { Method, Version } from "../types";
+import { db } from "./client";
+import { analysedData } from "./schema";
 
 export const CURRENT_VERSION = "V2";
 export async function insertBaseDataIntoAnalysedData(
@@ -110,7 +111,7 @@ export async function getBaseDataFromDB(version?: Version, fuzzed?: "ONE" | "ALL
         ),
         with: {
             fuzzedPasswords: {
-                // where: ne(analysedData.pwType, "REMOVED"),
+                where: ne(analysedData.pwType, "REMOVED"),
                 limit: fuzzed === "ALL" ? undefined : 1,
             },
         },
