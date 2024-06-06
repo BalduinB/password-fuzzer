@@ -55,7 +55,7 @@ export async function calculateGuesserLeakedStats() {
     }
     console.log("leaked V1:");
     console.table([statsOur]);
-    // console.table([statsOfMethod]);
+    console.table([statsOfMethod]);
     // console.table(Object.entries(statsOfMethod).sort((a, b) => b[1] - a[1]));
 }
 
@@ -100,7 +100,7 @@ export async function calculateGuesserNotLeakedStats() {
     console.log("not leaked V1:");
     // console.table([statsGuesser]);
     console.table([statsOur]);
-    // console.table([statsOfMethod]);
+    console.table([statsOfMethod]);
 
     // console.log("final stats:");
     // console.log(stats);

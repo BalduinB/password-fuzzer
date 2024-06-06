@@ -1,9 +1,6 @@
-import { db } from "./db/client";
-import { basePathOfBreachData, getLineCountOfFile, parseOutLines, walkWhile } from "./fs";
-import { eq } from "drizzle-orm";
-import { fNumber } from "./helpers/formaters";
-import { analysedDataTest } from "./db/schema";
 import { alreadyExists } from "./db/analysed-data";
+import { basePathOfBreachData, getLineCountOfFile, parseOutLines, walkWhile } from "./fs";
+import { fNumber } from "./helpers/formaters";
 
 const NUMBER_OF_ENTRIES = 3_279_064_311;
 export const SAMPLE_SIZE = 30_000;
@@ -95,15 +92,4 @@ function getRandomIds(amount: number) {
             ),
         ),
     );
-}
-
-export async function getDummyFromDB() {
-    return await db
-        .select({
-            password: analysedDataTest.pw,
-            email: analysedDataTest.email,
-        })
-        .from(analysedDataTest)
-        .where(eq(analysedDataTest.pwType, "base"))
-        .limit(SAMPLE_SIZE);
 }
