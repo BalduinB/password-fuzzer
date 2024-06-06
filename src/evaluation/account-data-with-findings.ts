@@ -21,10 +21,10 @@ export async function numberOfFindingsByPwType(version?: string) {
             if (!numberOfCredentialsWithFindings[version]) {
                 numberOfCredentialsWithFindings[version] = {};
             }
-            if (!numberOfCredentialsWithFindings[version][pwType]) {
-                numberOfCredentialsWithFindings[version][pwType] = 0;
+            if (!numberOfCredentialsWithFindings[version]?.[pwType]) {
+                numberOfCredentialsWithFindings[version]![pwType] = 0;
             }
-            numberOfCredentialsWithFindings[version][pwType]++;
+            numberOfCredentialsWithFindings[version]![pwType]++;
         }
         if (
             (fuzzedPasswords.some(({ pwType, hit }) => pwType === "tdt" && hit) ||
