@@ -1,22 +1,24 @@
 import { $ } from "bun";
 import { assert } from "console";
 import { config } from "dotenv";
-import { fuzzPassword } from "./generate-passwords";
+
 import { waitFor } from "@/lib/promise";
+
 import { logGlobalStats } from "./stats";
+
 config({
     // debug: true,
     path: "../../.env",
 });
 
-export let FAILED_CREADENTIALS_CHECK = 0; //12_070;
-export let TIMEDOUT_CREADENTIALS_CHECK = 0; //62;
+export let FAILED_CREADENTIALS_CHECK = 0;
+export let TIMEDOUT_CREADENTIALS_CHECK = 0;
 const BATCH_SIZE = 10;
 const TIMEOUT_AFTER_BATCH = 550;
 
 async function hasMatches(email: string, password: string) {
     assert(process.env.API_KEY, "env.API_KEY is required");
-    // return Math.random() > 0.5;
+    // return Math.random() > 0.5; // For testing
     try {
         const response =
             await $`./cli-client --email="${email}" --password="${password}" --api-key=${process.env.API_KEY}`.text();
@@ -41,7 +43,10 @@ export async function hasMatchesTimedOut(email: string, password: string) {
         });
     });
 }
-export async function appendLeakCheck(email: string, data: ReturnType<typeof fuzzPassword>) {
+export async function appendLeakCheck(
+    email: string,
+    data: Array<{ method: string; generated: Array<string> }>,
+) {
     const leakedResults: Array<{
         method: string;
         leakChecks: Array<{ isLeaked: boolean; password: string }>;

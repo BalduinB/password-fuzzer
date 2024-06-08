@@ -1,6 +1,6 @@
 import { enshureKey } from "@/lib/objects";
 
-import { getBaseDataFromDB } from "./db/analysed-data";
+import { getBaseDataFromDB } from "../db/analysed-data";
 
 export async function numberOfFindingsByPwType(version?: string) {
     const numberOfCredentialsWithFindings: Record<string, Record<string, number>> = {};

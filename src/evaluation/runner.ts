@@ -1,17 +1,19 @@
-import { numberOfFindingsByPwType } from "./account-data-with-findings";
+import { numberOfFindingsByPwType } from "./analyse/account-data-with-findings";
 import {
     calculateGuesserLeakedStats as baseLeaked,
     calculateGuesserNotLeakedStats as baseNotLeaked,
-} from "./analyse-base";
+} from "./analyse/analyse-base";
 import {
     calculateGuesserLeakedStats as v1Leaked,
     calculateGuesserNotLeakedStats as v1NotLeaked,
-} from "./analyse-v1";
+} from "./analyse/analyse-v1";
 import {
     calculateGuesserLeakedStats as v2Leaked,
     calculateGuesserNotLeakedStats as v2NotLeaked,
-} from "./analyse-v2";
-import { main } from "./main";
+} from "./analyse/analyse-v2";
+import { main as base } from "./steps/base/main";
+import { main as v1 } from "./steps/v1/main";
+import { main as v2 } from "./steps/v2/main";
 
 // baseLeaked();
 // baseNotLeaked();
@@ -19,7 +21,6 @@ import { main } from "./main";
 // v1NotLeaked();
 // v2Leaked();
 // v2NotLeaked();
-// await main();
 
 numberOfFindingsByPwType();
 
