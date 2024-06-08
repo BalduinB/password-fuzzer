@@ -6,7 +6,6 @@ data = {
     'Kategorie'  :  [ "Testdatensatz A" , "Testdatensatz B" ],
     'TDT'        :  [ 1621,0],
     'Guesser'    :  [ 2227 ,0],
-    # 'Guesser+TDT':  [ 2828 ,0],
     'Our'        :  [ 3025, 3073],
 }
 df = pd.DataFrame(data)
@@ -20,8 +19,7 @@ middle = index + bar_width / 2
 
 bars1 = plt.bar(middle + bar_width, df['TDT'], bar_width, label='TDT')
 bars3 = plt.bar(middle , df['Guesser'], bar_width, label='Guesser')
-# bars1 = plt.bar(middle , df['Guesser+TDT'], bar_width, label='TDT oder Guesser')
-bars4 = plt.bar(middle - bar_width, df['Our'], bar_width, label='Unser Fuzzer')
+bars4 = plt.bar(middle - bar_width, df['Our'], bar_width, label='Neuer Fuzzer')
 
 
 plt.ylabel('Anzahl Anmeldedaten',fontsize=16)
